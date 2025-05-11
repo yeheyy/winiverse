@@ -7,28 +7,18 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const session = require('express-session');
-const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 console.log("App initialized. Starting server...");
+
+// Check if the .env value is loaded correctly
 console.log("DEFAULT_REF_LINK:", process.env.DEFAULT_REF_LINK);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Session Middleware
-app.use(
-    session({
-        secret: "your_secret_key_here", // Change this to a more secure key
-        resave: false,
-        saveUninitialized: true,
-    })
-);
 
 const dataFilePath = path.join(__dirname, 'data.json');
 const lastIdFilePath = path.join(__dirname, 'lastId.json');
@@ -66,43 +56,6 @@ function getNextId() {
     return lastId;
 }
 
-// ✅ Authentication Middleware
-function isAuthenticated(req, res, next) {
-    if (req.session.isAuthenticated) {
-        return next();
-    }
-    res.redirect('/login.html');
-}
-
-// ✅ Login Route
-const ADMIN_CREDENTIALS = {
-    username: "ggyy",
-    password: "aa123123",
-};
-
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        req.session.isAuthenticated = true;
-        return res.redirect('/admin.html');
-    }
-
-    res.status(401).send("Incorrect username or password.");
-});
-
-// ✅ Logout Route
-app.get('/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.redirect('/login.html');
-    });
-});
-
-// ✅ Protect Admin Page
-app.get('/admin.html', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/admin.html'));
-});
-
 // ✅ Fetch all content
 app.get('/data.json', (req, res) => {
     try {
@@ -115,10 +68,12 @@ app.get('/data.json', (req, res) => {
 });
 
 // ✅ Add new content with .env fallback link
-app.post('/add-content', upload.single('image'), isAuthenticated, (req, res) => {
+app.post('/add-content', upload.single('image'), (req, res) => {
     const { username, description, link } = req.body;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
     
+    console.log("Using DEFAULT_REF_LINK:", process.env.DEFAULT_REF_LINK);
+
     const referralLink = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
 
     if (!username || !description || !referralLink) {
@@ -144,8 +99,8 @@ app.post('/add-content', upload.single('image'), isAuthenticated, (req, res) => 
     }
 });
 
-// ✅ Update content
-app.put('/update/:id', upload.single('image'), isAuthenticated, (req, res) => {
+// ✅ Update content with image and text support
+app.put('/update/:id', upload.single('image'), (req, res) => {
     const contentId = parseInt(req.params.id);
     const { username, description, link } = req.body;
     const newImageFile = req.file ? `/uploads/${req.file.filename}` : null;
@@ -183,7 +138,7 @@ app.put('/update/:id', upload.single('image'), isAuthenticated, (req, res) => {
 });
 
 // ✅ Delete content
-app.delete('/delete/:id', isAuthenticated, (req, res) => {
+app.delete('/delete/:id', (req, res) => {
     const contentId = parseInt(req.params.id);
 
     try {
@@ -214,12 +169,4 @@ app.delete('/delete/:id', isAuthenticated, (req, res) => {
 // ✅ Start the server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
-});
-
-
-// ✅ Logout route
-app.post('/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.json({ success: true, message: "Logged out successfully" });
-    });
 });
