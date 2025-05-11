@@ -37,14 +37,16 @@ app.use(express.static('public'));
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
 
-    console.log('Login attempt with:', username, password);
+    const validUsername = "ggyy";
+    const validPassword = "aa123123";
 
-    if (username === 'ggyy' && password === 'aa123123') {
-        req.session.user = { username };
-        console.log('Login successful, redirecting to admin page...');
-        return res.redirect('/admin.html'); // Change to your admin page path
+    if (username === validUsername && password === validPassword) {
+        req.session.user = validUsername;
+        console.log("Login successful:", username);
+        return res.redirect("/admin.html"); // Redirect to the admin page
     } else {
-        return res.status(401).json({ success: false, message: 'Invalid username or password' });
+        console.log("Invalid login attempt:", username, password);
+        return res.redirect("/login.html?error=1"); // Redirect to login page with error parameter
     }
 });
 
