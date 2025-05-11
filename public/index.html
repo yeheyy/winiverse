@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winiverse</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+
+<div class="header">
+    <h1>Welcome to Winiverse – The Ultimate Universe of Winners! </h1>
+</div>
+
+<div class="search-section">
+    <input type="text" id="visitorSearchBox" placeholder="Search by username or description">
+</div>
+
+<div class="content-container" id="visitor-content-container"></div>
+
+<div class="see-more-section">
+    <button class="see-more-btn" id="seeMoreVisitorBtn" onclick="loadMoreContent()" style="display: none;">See More</button>
+</div>
+
+<script>
+    let visitorContentData = [];
+    let itemsPerPage = 12;
+    let currentPage = 1;
+
+    async function loadContent() {
+        try {
+            const response = await fetch('/data.json');
+            visitorContentData = await response.json();
+            visitorContentData = visitorContentData.reverse(); // Show latest first
+            displayContent();
+        } catch (err) {
+            console.error('Error loading content:', err);
+        }
+    }
+
+    function displayContent(data = visitorContentData) {
+        const container = document.getElementById('visitor-content-container');
+        container.innerHTML = '';
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const visibleData = data.slice(0, endIndex);
+
+        visibleData.forEach(item => {
+            const contentItem = document.createElement('div');
+            contentItem.classList.add('content-item');
+
+            contentItem.innerHTML = `
+                <div class="content-image">
+                    <img src="${item.imageUrl}" alt="${item.username}">
+                </div>
+                <div class="content-info">
+                    <h3>${item.username}</h3>
+                    <p>${item.description}</p>
+                </div>
+                <div class="content-buttons">
+                    <a href="${item.link}" target="_blank" class="btn-primary">Play & Win Now!</a>
+                </div>
+            `;
+
+            container.appendChild(contentItem);
+        });
+
+        const seeMoreBtn = document.getElementById('seeMoreVisitorBtn');
+        seeMoreBtn.style.display = endIndex < data.length ? 'block' : 'none';
+    }
+
+    function loadMoreContent() {
+        currentPage++;
+        displayContent();
+    }
+
+    document.getElementById('visitorSearchBox').addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        const filteredData = visitorContentData.filter(item =>
+            item.username.toLowerCase().includes(query) ||
+            item.description.toLowerCase().includes(query)
+        );
+        currentPage = 1;
+        displayContent(filteredData);
+    });
+
+    window.onload = loadContent;
+</script>
+
+</body>
+</html>
