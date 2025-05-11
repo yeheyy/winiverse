@@ -4,18 +4,69 @@ console.log("Starting server.js...");
 require('dotenv').config();
 
 const express = require('express');
+
+const session = require('express-session');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 
-const app = express();
+const app = express(); // Initialize `app` first
 const PORT = process.env.PORT || 3000;
-
-console.log("App initialized. Starting server...");
 
 // Check if the .env value is loaded correctly
 console.log("DEFAULT_REF_LINK:", process.env.DEFAULT_REF_LINK);
 
+console.log("App initialized. Starting server...");
+
+// ✅ Middleware Setup
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ Session Middleware
+app.use(session({
+    secret: 'lucky',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }  // Set to true if using HTTPS
+}));
+
+// ✅ Static Files Middleware
+app.use(express.static('public'));
+
+// ✅ Login Route with Redirect to admin page
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    console.log('Login attempt with:', username, password);
+
+    if (username === 'ggyy' && password === 'aa123123') {
+        req.session.user = { username };
+        console.log('Login successful, redirecting to admin page...');
+        return res.redirect('/admin.html'); // Change to your admin page path
+    } else {
+        return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+});
+
+
+// ✅ Logout Route
+app.post('/logout', (req, res) => {
+    if (req.session) {
+        req.session.destroy(err => {
+            if (err) {
+                console.error('Error destroying session:', err);
+                return res.status(500).json({ success: false, message: 'Logout failed' });
+            }
+            res.clearCookie('connect.sid');
+            res.json({ success: true });
+        });
+    } else {
+        res.status(400).json({ success: false, message: 'No session to destroy' });
+    }
+});
+
+
+// Middleware for parsing JSON and form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
@@ -23,7 +74,7 @@ app.use(express.static('public'));
 const dataFilePath = path.join(__dirname, 'data.json');
 const lastIdFilePath = path.join(__dirname, 'lastId.json');
 
-// Multer setup for file uploads
+// ✅ Multer Setup for File Uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadsDir = path.join(__dirname, 'public', 'uploads');
@@ -39,7 +90,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Initialize data.json and lastId.json if they don't exist
+// ✅ Initialize data.json and lastId.json if they don't exist
 if (!fs.existsSync(dataFilePath)) {
     fs.writeFileSync(dataFilePath, JSON.stringify([]));
 }
@@ -56,7 +107,7 @@ function getNextId() {
     return lastId;
 }
 
-// ✅ Fetch all content
+// ✅ Fetch All Content
 app.get('/data.json', (req, res) => {
     try {
         const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
@@ -67,13 +118,10 @@ app.get('/data.json', (req, res) => {
     }
 });
 
-// ✅ Add new content with .env fallback link
+// ✅ Add New Content
 app.post('/add-content', upload.single('image'), (req, res) => {
     const { username, description, link } = req.body;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
-    
-    console.log("Using DEFAULT_REF_LINK:", process.env.DEFAULT_REF_LINK);
-
     const referralLink = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
 
     if (!username || !description || !referralLink) {
@@ -99,7 +147,7 @@ app.post('/add-content', upload.single('image'), (req, res) => {
     }
 });
 
-// ✅ Update content with image and text support
+// ✅ Update Content
 app.put('/update/:id', upload.single('image'), (req, res) => {
     const contentId = parseInt(req.params.id);
     const { username, description, link } = req.body;
@@ -137,7 +185,8 @@ app.put('/update/:id', upload.single('image'), (req, res) => {
     }
 });
 
-// ✅ Delete content
+
+// ✅ Delete Content
 app.delete('/delete/:id', (req, res) => {
     const contentId = parseInt(req.params.id);
 

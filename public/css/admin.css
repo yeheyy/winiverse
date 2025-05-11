@@ -200,3 +200,23 @@
             width: 100%;
         }
     }
+/*design of logout*/
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-logout {
+    background-color: #f04d4d;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-logout:hover {
+    background-color: #d63d3d;
+}

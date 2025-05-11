@@ -11,6 +11,8 @@
 <div class="header">
     <h1>Admin - Manage Casino Winners</h1>
     <button class="btn-primary" onclick="window.location.href='index.html'">Visitors Mode</button>
+    <!--logout button-->
+    <button class="btn-logout" id="logoutBtn">Logout</button>
 </div>
 
 <div class="container">
@@ -212,6 +214,26 @@ async function deleteContent(id) {
         console.error('Error deleting content:', err);
     }
 }
+
+// Logout Functionality
+document.getElementById('logoutBtn').addEventListener('click', function () {
+    fetch('/logout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = 'login.html';
+        } else {
+            alert('Logout failed. Please try again.');
+        }
+    })
+    .catch(err => console.error('Logout error:', err));
+});
+
 
 // Load Content on Page Load
 window.onload = loadAdminContent;
