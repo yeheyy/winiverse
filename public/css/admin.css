@@ -200,3 +200,35 @@
             width: 100%;
         }
     }
+
+    /*logout button style*/
+
+    .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #2a2a2a;
+    color: #fff;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-logout {
+    background-color: #f04d4d;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-logout:hover {
+    background-color: #d63d3d;
+}
+

@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Winiverse</title>
+    <title>Winiverse - Admin</title>
     <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
 
 <div class="header">
     <h1>Manage Casino Winners</h1>
-    <button class="btn-primary" onclick="window.location.href='index.html'">Visitors Mode</button>
+    <div class="header-buttons">
+        <button class="btn-primary" onclick="window.location.href='index.html'">Visitors Mode</button>
+        <button class="btn-logout" id="logoutBtn">Logout</button>
+    </div>
 </div>
 
 <div class="container">
@@ -47,174 +50,113 @@
 </div>
 
 <script>
-let adminContentData = [];
-const contentContainer = document.getElementById('admin-content-container');
+    let adminContentData = [];
+    const contentContainer = document.getElementById('admin-content-container');
 
-// Load Content Data
-async function loadAdminContent() {
-    try {
-        const response = await fetch('/data.json');
-        const data = await response.json();
-        adminContentData = data.reverse(); 
-        displayAdminContent();
-    } catch (err) {
-        console.error('Error loading content:', err);
-    }
-}
-
-// Add New Content
-const addContentForm = document.getElementById('addContentForm');
-
-addContentForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(addContentForm);
-
-    try {
-        const response = await fetch('/add-content', {
-            method: 'POST',
-            body: formData,
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            alert(result.message);
-            addContentForm.reset();
-            loadAdminContent();
-        } else {
-            alert('Error adding content: ' + result.error);
+    // Load Content Data
+    async function loadAdminContent() {
+        try {
+            const response = await fetch('/data.json');
+            const data = await response.json();
+            adminContentData = data.reverse(); 
+            displayAdminContent();
+        } catch (err) {
+            console.error('Error loading content:', err);
         }
-    } catch (err) {
-        console.error('Error adding content:', err);
     }
-});
 
-// Display Content
-function displayAdminContent() {
-    contentContainer.innerHTML = '';
+    // Add New Content
+    const addContentForm = document.getElementById('addContentForm');
 
-    adminContentData.forEach((item) => {
-        const contentItem = document.createElement('div');
-        contentItem.classList.add('content-item');
-        contentItem.setAttribute('data-id', item.id);
+    addContentForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const formData = new FormData(addContentForm);
 
-        contentItem.innerHTML = `
-            <div class="content-image">
-                <img src="${item.imageUrl}" alt="${item.username}" class="image-preview" data-id="${item.id}" onclick="triggerImageUpload(${item.id})" style="cursor: pointer;">
-                <input type="file" class="image-upload-input" data-id="${item.id}" style="display: none;" accept="image/*">
-            </div>
-            <div class="content-info">
-                <input type="text" value="${item.username}" class="edit-field" data-field="username" readonly>
-                <textarea class="edit-field" data-field="description" readonly>${item.description}</textarea>
-                <input type="url" value="${item.link}" class="edit-field" data-field="link" readonly>
-            </div>
-            <div class="content-buttons">
-                <button onclick="toggleEditMode(${item.id})" class="btn-update">Edit</button>
-                <button onclick="saveContent(${item.id})" class="btn-save" style="display: none;">Save</button>
-                <button onclick="deleteContent(${item.id})" class="btn-danger">Delete</button>
-            </div>
-        `;
+        try {
+            const response = await fetch('/add-content', {
+                method: 'POST',
+                body: formData,
+            });
 
-        contentContainer.appendChild(contentItem);
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message);
+                addContentForm.reset();
+                loadAdminContent();
+            } else {
+                alert('Error adding content: ' + result.error);
+            }
+        } catch (err) {
+            console.error('Error adding content:', err);
+        }
     });
-}
 
-// Trigger Image Upload
-function triggerImageUpload(id) {
-    const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
-    const isEditable = contentItem.getAttribute('data-editable') === 'true';
-    const imageInput = contentItem.querySelector('.image-upload-input');
+    // Display Content
+    function displayAdminContent() {
+        contentContainer.innerHTML = '';
 
-    if (isEditable) {
-        imageInput.click();
-    }
-}
+        adminContentData.forEach((item) => {
+            const contentItem = document.createElement('div');
+            contentItem.classList.add('content-item');
+            contentItem.setAttribute('data-id', item.id);
 
-// Toggle Edit Mode
-function toggleEditMode(id) {
-    const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
-    const saveBtn = contentItem.querySelector('.btn-save');
-    const editBtn = contentItem.querySelector('.btn-update');
-    const fields = contentItem.querySelectorAll('.edit-field');
-    const imageInput = contentItem.querySelector('.image-upload-input');
-    const imagePreview = contentItem.querySelector('.image-preview');
+            contentItem.innerHTML = `
+                <div class="content-image">
+                    <img src="${item.imageUrl}" alt="${item.username}" class="image-preview">
+                </div>
+                <div class="content-info">
+                    <input type="text" value="${item.username}" class="edit-field" data-field="username" readonly>
+                    <textarea class="edit-field" data-field="description" readonly>${item.description}</textarea>
+                    <input type="url" value="${item.link}" class="edit-field" data-field="link" readonly>
+                </div>
+                <div class="content-buttons">
+                    <button onclick="toggleEditMode(${item.id})" class="btn-update">Edit</button>
+                    <button onclick="saveContent(${item.id})" class="btn-save" style="display: none;">Save</button>
+                    <button onclick="deleteContent(${item.id})" class="btn-danger">Delete</button>
+                </div>
+            `;
 
-    const isEditable = contentItem.getAttribute('data-editable') === 'true';
-
-    if (isEditable) {
-        saveBtn.style.display = 'none';
-        editBtn.style.display = 'inline-block';
-        fields.forEach(field => field.readOnly = true);
-        imageInput.style.display = 'none';
-        imagePreview.style.cursor = 'pointer';
-        contentItem.setAttribute('data-editable', 'false');
-    } else {
-        saveBtn.style.display = 'inline-block';
-        editBtn.style.display = 'none';
-        fields.forEach(field => field.readOnly = false);
-        imageInput.style.display = 'block';
-        imagePreview.style.cursor = 'pointer';
-        contentItem.setAttribute('data-editable', 'true');
-    }
-}
-
-// Save Content
-async function saveContent(id) {
-    const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
-    const username = contentItem.querySelector('.edit-field[data-field="username"]').value.trim();
-    const description = contentItem.querySelector('.edit-field[data-field="description"]').value.trim();
-    const link = contentItem.querySelector('.edit-field[data-field="link"]').value.trim();
-    const imageInput = contentItem.querySelector('.image-upload-input');
-    const newImageFile = imageInput.files[0];
-
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('description', description);
-    formData.append('link', link);
-
-    if (newImageFile) {
-        formData.append('image', newImageFile);
-    }
-
-    try {
-        const response = await fetch(`/update/${id}`, {
-            method: 'PUT',
-            body: formData,
+            contentContainer.appendChild(contentItem);
         });
-
-        const result = await response.json();
-        if (result.success) {
-            alert('Content updated successfully');
-            loadAdminContent();
-        } else {
-            alert('Error updating content: ' + result.message);
-        }
-    } catch (err) {
-        console.error('Error updating content:', err);
     }
-}
 
-// Delete Content
-async function deleteContent(id) {
-    try {
-        const response = await fetch(`/delete/${id}`, {
-            method: 'DELETE',
-        });
+    // Logout Button Event
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+        fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = 'login.html';
+            }
+        })
+        .catch(err => console.log('Logout error:', err));
+    });
 
-        const result = await response.json();
-        if (result.success) {
-            alert('Content deleted successfully');
-            loadAdminContent();
-        } else {
-            alert('Error deleting content: ' + result.error);
-        }
-    } catch (err) {
-        console.error('Error deleting content:', err);
-    }
-}
 
-// Load Content on Page Load
-window.onload = loadAdminContent;
+      // Logout Button Event
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+        fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = 'login.html';
+            }
+        })
+        .catch(err => console.log('Logout error:', err));
+    });
+
+    // Load Content on Page Load
+    window.onload = loadAdminContent;
 </script>
 
 </body>
