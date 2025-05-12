@@ -197,6 +197,7 @@ async function saveContent(id) {
 }
 
 // Delete Content
+
 async function deleteContent(id) {
     try {
         const response = await fetch(`/delete/${id}`, {
@@ -206,7 +207,12 @@ async function deleteContent(id) {
         const result = await response.json();
         if (result.success) {
             alert('Content deleted successfully');
-            loadAdminContent();
+
+            // Remove the deleted item from the adminContentData array
+            adminContentData = adminContentData.filter(item => item.id !== id);
+
+            // Update the display
+            displayAdminContent();
         } else {
             alert('Error deleting content: ' + result.error);
         }
@@ -214,6 +220,7 @@ async function deleteContent(id) {
         console.error('Error deleting content:', err);
     }
 }
+
 
 // Logout Functionality
 document.getElementById('logoutBtn').addEventListener('click', function () {

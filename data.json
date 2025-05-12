@@ -1,12 +1,5 @@
 [
   {
-    "id": 3,
-    "username": "yojan yes",
-    "description": "ako ay nanalo ng 1 milyon sa slot",
-    "link": "https://www.extremegaming88.com/",
-    "imageUrl": "/uploads/1746945354248-494577611_1375602213479182_1311230337363314205_n (1).png"
-  },
-  {
     "id": 5,
     "username": "cashking",
     "description": "Malupit ang gabi ko! Mula sa ₱300, nag-uwi ako ng ₱100,000! Di makapaniwala!",
@@ -40,12 +33,5 @@
     "description": "ako ay nanalo ng 1 milyon sa slot",
     "link": "https://www.extremegaming88.com/",
     "imageUrl": "/uploads/1746949439945-Untitled design (4).png"
-  },
-  {
-    "id": 4,
-    "username": "test",
-    "description": "test",
-    "link": "https://www.extremegaming88.com/",
-    "imageUrl": "/uploads/1746957749927-494577611_1375602213479182_1311230337363314205_n (1).png"
   }
 ]
