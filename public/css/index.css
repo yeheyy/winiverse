@@ -1,5 +1,5 @@
 body {
-    background-color: #1e1e2f;
+    background-color: #1b1b2f;
     font-family: 'Poppins', sans-serif;
     color: #e0e0e0;
     margin: 0;
@@ -7,12 +7,20 @@ body {
 }
 
 .header {
-    background-color: #2a2a3b;
-    padding: 20px;
+    background-color: #23233d;
+    padding: 30px;
     text-align: center;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: bold;
-    color: #ffda79;
+    color: #ffd700;
+    text-shadow: 0px 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+.header .highlight {
+    color: #ff79c6;
+    background: linear-gradient(135deg, #ff79c6, #bd93f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .search-section {
@@ -22,115 +30,131 @@ body {
 }
 
 .search-section input {
-    padding: 10px;
-    width: 300px;
+    padding: 12px;
+    width: 320px;
     border: 2px solid #ff79c6;
-    border-radius: 25px;
-    background-color: #2a2a3b;
+    border-radius: 30px;
+    background-color: #29294d;
     color: #e0e0e0;
     font-size: 16px;
     outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-section input:focus {
+    border-color: #bd93f9;
+    box-shadow: 0px 4px 12px rgba(189, 147, 249, 0.5);
 }
 
 .content-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
     padding: 20px;
 }
 
 .content-item {
     background-color: #2a2a3b;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.5);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.6);
 }
 
 .content-item:hover {
     transform: scale(1.05);
-    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.7);
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+.content-card {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
 }
 
 .content-image {
     position: relative;
     width: 100%;
-    height: 180px;  /* Increased height for better visibility */
-    background-color: #1e1e2f;
+    height: 180px;
+    background-color: #1b1b2f;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    border-radius: 8px;
 }
 
 .content-image img {
     width: 100%;
     height: 100%;
-    object-fit: contain;  /* Ensures the whole image is visible */
-    transition: transform 0.3s ease;
+    object-fit: cover;
+    transition: transform 0.4s;
 }
 
 .content-item:hover .content-image img {
-    transform: scale(1.05);
+    transform: scale(1.1);
 }
 
 .content-info {
-    padding: 15px;
     text-align: center;
+    padding: 15px;
 }
 
-.content-info h3 {
-    color: #ffda79;
-    font-weight: bold;
-    margin-bottom: 5px;
+.content-info .username {
     font-size: 18px;
-    text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+    font-weight: bold;
+    color: #ffda79;
+    text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4);
+    margin-bottom: 8px;
 }
 
-.content-info p {
+.content-info .description {
     font-size: 14px;
     color: #cfcfcf;
     margin-bottom: 10px;
-}
-
-.content-buttons {
-    text-align: center;
-    margin-bottom: 15px;
+    line-height: 1.4;
 }
 
 .btn-primary {
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: linear-gradient(135deg, #ff79c6, #bd93f9);
     border: none;
     border-radius: 30px;
     color: #fff;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.3s, box-shadow 0.3s;
+    transition: background 0.4s, box-shadow 0.4s, transform 0.4s;
     text-transform: uppercase;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .btn-primary:hover {
     background: linear-gradient(135deg, #bd93f9, #ff79c6);
-    box-shadow: 0px 4px 15px rgba(255, 121, 198, 0.5);
+    box-shadow: 0px 8px 20px rgba(255, 121, 198, 0.5);
+    transform: translateY(-2px);
 }
 
 .see-more-section {
     text-align: center;
-    margin: 20px 0;
+    margin: 30px 0;
 }
 
 .see-more-btn {
-    padding: 10px 20px;
+    padding: 12px 24px;
     background-color: #ff79c6;
     border: none;
-    border-radius: 25px;
+    border-radius: 30px;
     color: #fff;
-    cursor: pointer;
     font-weight: bold;
-    transition: background-color 0.3s;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.4s, box-shadow 0.4s;
 }
 
 .see-more-btn:hover {
     background-color: #bd93f9;
+    box-shadow: 0px 6px 16px rgba(255, 121, 198, 0.5);
 }

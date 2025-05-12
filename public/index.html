@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Winiverse</title>
+    <title>Winiverse – Universe of Winners</title>
+    <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
 
 <div class="header">
-    <h1>Welcome to Winiverse – The Ultimate Universe of Winners! </h1>
+    <h1>Welcome to <span class="highlight">Winiverse</span> – The Ultimate Universe of Winners!</h1>
 </div>
 
 <div class="search-section">
@@ -19,7 +20,7 @@
 <div class="content-container" id="visitor-content-container"></div>
 
 <div class="see-more-section">
-    <button class="see-more-btn" id="seeMoreVisitorBtn" onclick="loadMoreContent()" style="display: none;">See More</button>
+    <button class="btn-primary see-more-btn" id="seeMoreVisitorBtn" onclick="loadMoreContent()">See More</button>
 </div>
 
 <script>
@@ -51,15 +52,15 @@
             contentItem.classList.add('content-item');
 
             contentItem.innerHTML = `
-                <div class="content-image">
-                    <img src="${item.imageUrl}" alt="${item.username}">
-                </div>
-                <div class="content-info">
-                    <h3>${item.username}</h3>
-                    <p>${item.description}</p>
-                </div>
-                <div class="content-buttons">
-                    <a href="${item.link}" target="_blank" class="btn-primary">Start Your Winning Journey!</a>
+                <div class="content-card">
+                    <div class="content-image">
+                        <img src="${item.imageUrl}" alt="${item.username}">
+                    </div>
+                    <div class="content-info">
+                        <h3 class="username">${item.username}</h3>
+                        <p class="description">${item.description}</p>
+                        <a href="${item.link}" target="_blank" class="btn-primary">Start Your Winning Journey</a>
+                    </div>
                 </div>
             `;
 

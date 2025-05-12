@@ -1,4 +1,4 @@
-/* Common Styles for Uni-Winners Project */
+/* Common Styles for Winiverse Project */
 
 body, html {
     margin: 0;
@@ -41,41 +41,68 @@ body, html {
     }
 }
 
-/* Common Button Styles */
+/* Button Styles */
 .btn-primary, .btn-update, .btn-danger {
-    padding: 12px;
+    padding: 12px 16px;
     font-size: 14px;
     font-weight: bold;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: background-color 0.3s, box-shadow 0.3s;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
     color: #fff;
     text-align: center;
 }
 
 .btn-primary {
     background-color: #00a8e8;
+    box-shadow: 0px 4px 6px rgba(0, 168, 232, 0.3);
 }
 
 .btn-primary:hover {
     background-color: #00c3ff;
+    box-shadow: 0px 6px 12px rgba(0, 195, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    background-color: #008bbd;
+    box-shadow: none;
+    transform: translateY(0);
 }
 
 .btn-update {
     background-color: #ffc107;
+    box-shadow: 0px 4px 6px rgba(255, 193, 7, 0.3);
 }
 
 .btn-update:hover {
     background-color: #e0a800;
+    box-shadow: 0px 6px 12px rgba(224, 168, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-update:active {
+    background-color: #c69500;
+    box-shadow: none;
+    transform: translateY(0);
 }
 
 .btn-danger {
     background-color: #dc3545;
+    box-shadow: 0px 4px 6px rgba(220, 53, 69, 0.3);
 }
 
 .btn-danger:hover {
     background-color: #c82333;
+    box-shadow: 0px 6px 12px rgba(200, 35, 51, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-danger:active {
+    background-color: #a71d2a;
+    box-shadow: none;
+    transform: translateY(0);
 }
 
 /* Input and Form Styles */
@@ -91,12 +118,13 @@ input, textarea {
     color: #e0e0e0;
     border: 1px solid #ff616d;
     border-radius: 8px;
-    transition: border-color 0.3s;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 input:focus, textarea:focus {
     border-color: #ff858d;
     outline: none;
+    box-shadow: 0px 4px 8px rgba(255, 97, 109, 0.4);
 }
 
 /* Search Input */
@@ -122,18 +150,19 @@ input:focus, textarea:focus {
     box-shadow: 0px 4px 8px rgba(255, 97, 109, 0.5);
 }
 
-/* Common Card Styles */
+/* Card Styles */
 .card {
     background-color: #1f1b3e;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s;
     text-align: center;
 }
 
 .card:hover {
-    transform: scale(1.02);
+    transform: scale(1.03);
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.4);
 }
 
 .card img {
@@ -142,6 +171,11 @@ input:focus, textarea:focus {
     object-fit: cover;
     border-radius: 8px;
     margin-bottom: 10px;
+    transition: transform 0.3s;
+}
+
+.card img:hover {
+    transform: scale(1.05);
 }
 
 .card-title {
@@ -160,8 +194,9 @@ input:focus, textarea:focus {
     text-decoration: none;
     color: #00a8e8;
     font-weight: 600;
+    transition: color 0.3s;
 }
 
 .card-link:hover {
-    text-decoration: underline;
+    color: #00c3ff;
 }
