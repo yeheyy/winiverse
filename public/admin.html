@@ -46,18 +46,6 @@
     </form>
   </div>
 
-  <!-- Leaderboard -->
-  <div class="leaderboard-section">
-    <h2>Top 10 Leaderboard</h2>
-    <ul id="leaderboard"></ul>
-  </div>
-
-  <!-- Latest Wins -->
-  <div class="latest-wins-section">
-    <h2>Latest Wins</h2>
-    <ul id="latestWins"></ul>
-  </div>
-
   <!-- Content Container -->
   <div class="content-container" id="admin-content-container"></div>
 
@@ -66,8 +54,6 @@
 <script>
 let adminContentData = [];
 const contentContainer = document.getElementById('admin-content-container');
-const leaderboard = document.getElementById('leaderboard');
-const latestWins = document.getElementById('latestWins');
 
 // Load Content Data
 async function loadAdminContent() {
@@ -76,8 +62,6 @@ async function loadAdminContent() {
     const data = await response.json();
     adminContentData = data.reverse();
     displayAdminContent();
-    updateLeaderboard();
-    updateLatestWins();
   } catch (err) {
     console.error('Error loading content:', err);
   }
@@ -87,7 +71,6 @@ async function loadAdminContent() {
 const addContentForm = document.getElementById('addContentForm');
 addContentForm.addEventListener('submit', async function (e) {
   e.preventDefault();
-
   const formData = new FormData(addContentForm);
 
   try {
@@ -137,33 +120,6 @@ function displayAdminContent() {
     `;
 
     contentContainer.appendChild(contentItem);
-  });
-  updateLeaderboard();
-  updateLatestWins();
-}
-
-function updateLeaderboard() {
-  leaderboard.innerHTML = '';
-  const sorted = [...adminContentData]
-    .filter(item => item.amount)
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 10);
-
-  sorted.forEach((item, index) => {
-    const li = document.createElement('li');
-    li.textContent = `${index + 1}. ${item.username} - ₱${Number(item.amount).toLocaleString()}`;
-    leaderboard.appendChild(li);
-  });
-}
-
-function updateLatestWins() {
-  latestWins.innerHTML = '';
-  const latest = [...adminContentData].slice(0, 5);
-
-  latest.forEach(item => {
-    const li = document.createElement('li');
-    li.textContent = `${item.username}: ${item.description} - ₱${Number(item.amount || 0).toLocaleString()}`;
-    latestWins.appendChild(li);
   });
 }
 
