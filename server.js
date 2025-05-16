@@ -20,12 +20,8 @@ const dataFilePath = path.join(storagePath, 'data.json');
 const lastIdFilePath = path.join(storagePath, 'lastId.json');
 
 // ✅ Ensure directories exist
-if (!fs.existsSync(storagePath)) {
-    fs.mkdirSync(storagePath, { recursive: true });
-}
-if (!fs.existsSync(uploadsPath)) {
-    fs.mkdirSync(uploadsPath, { recursive: true });
-}
+if (!fs.existsSync(storagePath)) fs.mkdirSync(storagePath, { recursive: true });
+if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 
 // ✅ Initialize data.json and lastId.json if they don't exist
 if (!fs.existsSync(dataFilePath)) fs.writeFileSync(dataFilePath, JSON.stringify([]));
@@ -75,7 +71,6 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
-
 const upload = multer({ storage });
 
 // ✅ Get Next ID
@@ -98,7 +93,7 @@ app.get('/data.json', (req, res) => {
 
 // ✅ Add New Content
 app.post('/add-content', upload.single('image'), (req, res) => {
-    const { username, description, link } = req.body;
+    const { username, description, link, amount } = req.body;
     const referralLink = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
 
@@ -107,7 +102,8 @@ app.post('/add-content', upload.single('image'), (req, res) => {
         username: username.trim(),
         description: description.trim(),
         link: referralLink,
-        imageUrl
+        imageUrl,
+        amount: amount ? parseFloat(amount) : null
     };
 
     try {
@@ -123,7 +119,7 @@ app.post('/add-content', upload.single('image'), (req, res) => {
 // ✅ Update Content
 app.put('/update/:id', upload.single('image'), (req, res) => {
     const contentId = parseInt(req.params.id);
-    const { username, description, link } = req.body;
+    const { username, description, link, amount } = req.body;
     const newImageFile = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
@@ -142,6 +138,7 @@ app.put('/update/:id', upload.single('image'), (req, res) => {
             existingContent.username = username.trim();
             existingContent.description = description.trim();
             existingContent.link = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
+            existingContent.amount = amount ? parseFloat(amount) : null;
 
             data[contentIndex] = existingContent;
             fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));

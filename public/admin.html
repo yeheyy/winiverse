@@ -1,248 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Uni-Winners</title>
-    <link rel="stylesheet" href="css/admin.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Uni-Winners</title>
+  <link rel="stylesheet" href="css/admin.css"/>
 </head>
 <body>
 
 <div class="header">
-    <h1>Admin - Manage Casino Winners</h1>
-    <button class="btn-primary" onclick="window.location.href='index.html'">Visitors Mode</button>
-    <!--logout button-->
-    <button class="btn-logout" id="logoutBtn">Logout</button>
+  <h1>Admin - Manage Casino Winners</h1>
+  <button class="btn-primary" onclick="window.location.href='index.html'">Visitors Mode</button>
+  <button class="btn-logout" id="logoutBtn">Logout</button>
 </div>
 
 <div class="container">
 
-    <!-- Add Content Form -->
-    <div class="add-content-form">
-        <h2>Add New Content</h2>
-        <form id="addContentForm" enctype="multipart/form-data" action="/add-content" method="POST">
-            <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" required></textarea>
-            </div>
-            <div class="form-group">
-                <label for="link">Casino Link:</label>
-                <input type="url" id="link" name="link" required>
-            </div>
-            <div class="form-group">
-                <label for="image">Image:</label>
-                <input type="file" id="image" name="image" accept="image/*" required>
-            </div>
-            <div class="form-group">
-                <button type="submit" class="btn-primary">Add Content</button>
-            </div>
-        </form>
-    </div>
+  <!-- Add Content Form -->
+  <div class="add-content-form">
+    <h2>Add New Content</h2>
+    <form id="addContentForm" enctype="multipart/form-data" action="/add-content" method="POST">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required />
+      </div>
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="amount">Winning Amount:</label>
+        <input type="number" id="amount" name="amount" required />
+      </div>
+      <div class="form-group">
+        <label for="link">Casino Link:</label>
+        <input type="url" id="link" name="link" required />
+      </div>
+      <div class="form-group">
+        <label for="image">Image:</label>
+        <input type="file" id="image" name="image" accept="image/*" required />
+      </div>
+      <div class="form-group">
+        <button type="submit" class="btn-primary">Add Content</button>
+      </div>
+    </form>
+  </div>
 
-    <!-- Content Container -->
-    <div class="content-container" id="admin-content-container"></div>
+  <!-- Leaderboard -->
+  <div class="leaderboard-section">
+    <h2>Top 10 Leaderboard</h2>
+    <ul id="leaderboard"></ul>
+  </div>
+
+  <!-- Latest Wins -->
+  <div class="latest-wins-section">
+    <h2>Latest Wins</h2>
+    <ul id="latestWins"></ul>
+  </div>
+
+  <!-- Content Container -->
+  <div class="content-container" id="admin-content-container"></div>
 
 </div>
 
 <script>
 let adminContentData = [];
 const contentContainer = document.getElementById('admin-content-container');
+const leaderboard = document.getElementById('leaderboard');
+const latestWins = document.getElementById('latestWins');
 
 // Load Content Data
 async function loadAdminContent() {
-    try {
-        const response = await fetch('/data.json');
-        const data = await response.json();
-        adminContentData = data.reverse(); 
-        displayAdminContent();
-    } catch (err) {
-        console.error('Error loading content:', err);
-    }
+  try {
+    const response = await fetch('/data.json');
+    const data = await response.json();
+    adminContentData = data.reverse();
+    displayAdminContent();
+    updateLeaderboard();
+    updateLatestWins();
+  } catch (err) {
+    console.error('Error loading content:', err);
+  }
 }
 
 // Add New Content
 const addContentForm = document.getElementById('addContentForm');
-
 addContentForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    const formData = new FormData(addContentForm);
+  const formData = new FormData(addContentForm);
 
-    try {
-        const response = await fetch('/add-content', {
-            method: 'POST',
-            body: formData,
-        });
+  try {
+    const response = await fetch('/add-content', {
+      method: 'POST',
+      body: formData,
+    });
 
-        const result = await response.json();
-        if (result.success) {
-            alert(result.message);
-            addContentForm.reset();
-            loadAdminContent();
-        } else {
-            alert('Error adding content: ' + result.error);
-        }
-    } catch (err) {
-        console.error('Error adding content:', err);
+    const result = await response.json();
+    if (result.success) {
+      alert(result.message);
+      addContentForm.reset();
+      loadAdminContent();
+    } else {
+      alert('Error adding content: ' + result.error);
     }
+  } catch (err) {
+    console.error('Error adding content:', err);
+  }
 });
 
 // Display Content
 function displayAdminContent() {
-    contentContainer.innerHTML = '';
+  contentContainer.innerHTML = '';
 
-    adminContentData.forEach((item) => {
-        const contentItem = document.createElement('div');
-        contentItem.classList.add('content-item');
-        contentItem.setAttribute('data-id', item.id);
+  adminContentData.forEach((item) => {
+    const contentItem = document.createElement('div');
+    contentItem.classList.add('content-item');
+    contentItem.setAttribute('data-id', item.id);
 
-        contentItem.innerHTML = `
-            <div class="content-image">
-                <img src="${item.imageUrl}" alt="${item.username}" class="image-preview" data-id="${item.id}" onclick="triggerImageUpload(${item.id})" style="cursor: pointer;">
-                <input type="file" class="image-upload-input" data-id="${item.id}" style="display: none;" accept="image/*">
-            </div>
-            <div class="content-info">
-                <input type="text" value="${item.username}" class="edit-field" data-field="username" readonly>
-                <textarea class="edit-field" data-field="description" readonly>${item.description}</textarea>
-                <input type="url" value="${item.link}" class="edit-field" data-field="link" readonly>
-            </div>
-            <div class="content-buttons">
-                <button onclick="toggleEditMode(${item.id})" class="btn-update">Edit</button>
-                <button onclick="saveContent(${item.id})" class="btn-save" style="display: none;">Save</button>
-                <button onclick="deleteContent(${item.id})" class="btn-danger">Delete</button>
-            </div>
-        `;
+    contentItem.innerHTML = `
+      <div class="content-image">
+        <img src="${item.imageUrl}" alt="${item.username}" class="image-preview" data-id="${item.id}" onclick="triggerImageUpload(${item.id})" style="cursor: pointer;">
+        <input type="file" class="image-upload-input" data-id="${item.id}" style="display: none;" accept="image/*">
+      </div>
+      <div class="content-info">
+        <input type="text" value="${item.username}" class="edit-field" data-field="username" readonly>
+        <textarea class="edit-field" data-field="description" readonly>${item.description}</textarea>
+        <input type="number" value="${item.amount || 0}" class="edit-field" data-field="amount" readonly>
+        <input type="url" value="${item.link}" class="edit-field" data-field="link" readonly>
+      </div>
+      <div class="content-buttons">
+        <button onclick="toggleEditMode(${item.id})" class="btn-update">Edit</button>
+        <button onclick="saveContent(${item.id})" class="btn-save" style="display: none;">Save</button>
+        <button onclick="deleteContent(${item.id})" class="btn-danger">Delete</button>
+      </div>
+    `;
 
-        contentContainer.appendChild(contentItem);
-    });
+    contentContainer.appendChild(contentItem);
+  });
+  updateLeaderboard();
+  updateLatestWins();
 }
 
-// Trigger Image Upload
+function updateLeaderboard() {
+  leaderboard.innerHTML = '';
+  const sorted = [...adminContentData]
+    .filter(item => item.amount)
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 10);
+
+  sorted.forEach((item, index) => {
+    const li = document.createElement('li');
+    li.textContent = `${index + 1}. ${item.username} - ₱${Number(item.amount).toLocaleString()}`;
+    leaderboard.appendChild(li);
+  });
+}
+
+function updateLatestWins() {
+  latestWins.innerHTML = '';
+  const latest = [...adminContentData].slice(0, 5);
+
+  latest.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = `${item.username}: ${item.description} - ₱${Number(item.amount || 0).toLocaleString()}`;
+    latestWins.appendChild(li);
+  });
+}
+
 function triggerImageUpload(id) {
-    const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
-    const isEditable = contentItem.getAttribute('data-editable') === 'true';
-    const imageInput = contentItem.querySelector('.image-upload-input');
-
-    if (isEditable) {
-        imageInput.click();
-    }
+  const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
+  const isEditable = contentItem.getAttribute('data-editable') === 'true';
+  const imageInput = contentItem.querySelector('.image-upload-input');
+  if (isEditable) imageInput.click();
 }
 
-// Toggle Edit Mode
 function toggleEditMode(id) {
-    const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
-    const saveBtn = contentItem.querySelector('.btn-save');
-    const editBtn = contentItem.querySelector('.btn-update');
-    const fields = contentItem.querySelectorAll('.edit-field');
-    const imageInput = contentItem.querySelector('.image-upload-input');
-    const imagePreview = contentItem.querySelector('.image-preview');
+  const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
+  const saveBtn = contentItem.querySelector('.btn-save');
+  const editBtn = contentItem.querySelector('.btn-update');
+  const fields = contentItem.querySelectorAll('.edit-field');
+  const imageInput = contentItem.querySelector('.image-upload-input');
+  const imagePreview = contentItem.querySelector('.image-preview');
+  const isEditable = contentItem.getAttribute('data-editable') === 'true';
 
-    const isEditable = contentItem.getAttribute('data-editable') === 'true';
-
-    if (isEditable) {
-        saveBtn.style.display = 'none';
-        editBtn.style.display = 'inline-block';
-        fields.forEach(field => field.readOnly = true);
-        imageInput.style.display = 'none';
-        imagePreview.style.cursor = 'pointer';
-        contentItem.setAttribute('data-editable', 'false');
-    } else {
-        saveBtn.style.display = 'inline-block';
-        editBtn.style.display = 'none';
-        fields.forEach(field => field.readOnly = false);
-        imageInput.style.display = 'block';
-        imagePreview.style.cursor = 'pointer';
-        contentItem.setAttribute('data-editable', 'true');
-    }
+  if (isEditable) {
+    saveBtn.style.display = 'none';
+    editBtn.style.display = 'inline-block';
+    fields.forEach(field => field.readOnly = true);
+    imageInput.style.display = 'none';
+    imagePreview.style.cursor = 'pointer';
+    contentItem.setAttribute('data-editable', 'false');
+  } else {
+    saveBtn.style.display = 'inline-block';
+    editBtn.style.display = 'none';
+    fields.forEach(field => field.readOnly = false);
+    imageInput.style.display = 'block';
+    imagePreview.style.cursor = 'pointer';
+    contentItem.setAttribute('data-editable', 'true');
+  }
 }
 
-// Save Content
 async function saveContent(id) {
-    const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
-    const username = contentItem.querySelector('.edit-field[data-field="username"]').value.trim();
-    const description = contentItem.querySelector('.edit-field[data-field="description"]').value.trim();
-    const link = contentItem.querySelector('.edit-field[data-field="link"]').value.trim();
-    const imageInput = contentItem.querySelector('.image-upload-input');
-    const newImageFile = imageInput.files[0];
+  const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
+  const username = contentItem.querySelector('.edit-field[data-field="username"]').value.trim();
+  const description = contentItem.querySelector('.edit-field[data-field="description"]').value.trim();
+  const amount = contentItem.querySelector('.edit-field[data-field="amount"]').value.trim();
+  const link = contentItem.querySelector('.edit-field[data-field="link"]').value.trim();
+  const imageInput = contentItem.querySelector('.image-upload-input');
+  const newImageFile = imageInput.files[0];
 
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('description', description);
-    formData.append('link', link);
+  const formData = new FormData();
+  formData.append('username', username);
+  formData.append('description', description);
+  formData.append('amount', amount);
+  formData.append('link', link);
 
-    if (newImageFile) {
-        formData.append('image', newImageFile);
+  if (newImageFile) {
+    formData.append('image', newImageFile);
+  }
+
+  try {
+    const response = await fetch(`/update/${id}`, {
+      method: 'PUT',
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (result.success) {
+      alert('Content updated successfully');
+      loadAdminContent();
+    } else {
+      alert('Error updating content: ' + result.message);
     }
-
-    try {
-        const response = await fetch(`/update/${id}`, {
-            method: 'PUT',
-            body: formData,
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            alert('Content updated successfully');
-            loadAdminContent();
-        } else {
-            alert('Error updating content: ' + result.message);
-        }
-    } catch (err) {
-        console.error('Error updating content:', err);
-    }
+  } catch (err) {
+    console.error('Error updating content:', err);
+  }
 }
-
-// Delete Content
 
 async function deleteContent(id) {
-    try {
-        const response = await fetch(`/delete/${id}`, {
-            method: 'DELETE',
-        });
+  try {
+    const response = await fetch(`/delete/${id}`, {
+      method: 'DELETE',
+    });
 
-        const result = await response.json();
-        if (result.success) {
-            alert('Content deleted successfully');
-
-            // Remove the deleted item from the adminContentData array
-            adminContentData = adminContentData.filter(item => item.id !== id);
-
-            // Update the display
-            displayAdminContent();
-        } else {
-            alert('Error deleting content: ' + result.error);
-        }
-    } catch (err) {
-        console.error('Error deleting content:', err);
+    const result = await response.json();
+    if (result.success) {
+      alert('Content deleted successfully');
+      adminContentData = adminContentData.filter(item => item.id !== id);
+      displayAdminContent();
+    } else {
+      alert('Error deleting content: ' + result.error);
     }
+  } catch (err) {
+    console.error('Error deleting content:', err);
+  }
 }
 
-
-// Logout Functionality
 document.getElementById('logoutBtn').addEventListener('click', function () {
-    fetch('/logout', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = 'login.html';
-        } else {
-            alert('Logout failed. Please try again.');
-        }
-    })
-    .catch(err => console.error('Logout error:', err));
+  fetch('/logout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      window.location.href = 'login.html';
+    } else {
+      alert('Logout failed. Please try again.');
+    }
+  })
+  .catch(err => console.error('Logout error:', err));
 });
 
-
-// Load Content on Page Load
 window.onload = loadAdminContent;
 </script>
 
