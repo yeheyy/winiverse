@@ -1,3 +1,5 @@
+//this is the backend code for the app
+
 console.log("Starting server.js...");
 
 require('dotenv').config();
@@ -30,26 +32,6 @@ if (!fs.existsSync(lastIdFilePath)) fs.writeFileSync(lastIdFilePath, '0');
 // ✅ Middleware Setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-//add middleware to avoid chaching static files
-app.use((req, res, next) => {
-    res.setHeader('Cache-Control', 'no-store');
-    next();
-});
-
-//✅Add a basic GET route for homepage fallback 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-//✅Add a catch-all for undefined routes (optional but user-friendly)
-app.use((req, res) => {
-    res.status(404).send('Page not found.');
-});
-
-
-
-
 
 // ✅ Static Files Middleware
 app.use('/uploads', express.static(uploadsPath));
@@ -95,12 +77,11 @@ const upload = multer({ storage });
 
 // ✅ Get Next ID
 function getNextId() {
-    const lastId = parseInt(fs.readFileSync(lastIdFilePath, 'utf8')) || 0;
-    const newId = lastId + 1;
-    fs.writeFileSync(lastIdFilePath, newId.toString());
-    return newId;
+    let lastId = parseInt(fs.readFileSync(lastIdFilePath, 'utf8')) || 0;
+    lastId += 1;
+    fs.writeFileSync(lastIdFilePath, lastId.toString());
+    return lastId;
 }
-
 
 // ✅ Fetch All Content
 app.get('/data.json', (req, res) => {
