@@ -1,4 +1,8 @@
+<!-- visitors page-->>
+
 <!DOCTYPE html>
+
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -18,22 +22,27 @@
 </div>
 
 <!-- Leaderboard Section -->
+
 <div class="leaderboard-section">
   <h2>🏆 Top 10 Leaderboard</h2>
   <ul id="leaderboard"></ul>
 </div>
 
+<!-- Latest Wins Section -->
+
+<div class="latest-wins-section">
+  <h2>🔥 Latest Wins</h2>
+  <ul id="latestWins"></ul>
+</div>
+
 <!-- Main Content Grid -->
+
 <div class="content-container" id="visitor-content-container"></div>
 
 <!-- See More Button -->
+
 <div class="see-more-section">
   <button class="btn-primary see-more-btn" id="seeMoreVisitorBtn" onclick="loadMoreContent()">See More</button>
-</div>
-
-<!-- Latest Wins Section moved here, list removed -->
-<div class="latest-wins-section">
-  <h2>🔥 Latest Wins</h2>
 </div>
 
 <script>
@@ -105,7 +114,15 @@
 
   function updateLatestWins() {
     const latestWins = document.getElementById('latestWins');
-    if (latestWins) latestWins.remove(); // Remove the <ul> list if it exists
+    latestWins.innerHTML = '';
+
+    const latest = [...visitorContentData].slice(0, 5);
+
+    latest.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `${item.username}: ${item.description}${item.amount ? ` – ₱${Number(item.amount).toLocaleString()}` : ''}`;
+      latestWins.appendChild(li);
+    });
   }
 
   function loadMoreContent() {

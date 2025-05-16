@@ -13,10 +13,11 @@ body {
     font-size: 26px;
     font-weight: bold;
     color: #ffd700;
-    text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    text-shadow: 0px 4px 6px rgba(0, 0, 0, 0.5);
 }
 
 .header .highlight {
+    color: #ff79c6;
     background: linear-gradient(135deg, #ff79c6, #bd93f9);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -42,7 +43,7 @@ body {
 
 .search-section input:focus {
     border-color: #bd93f9;
-    box-shadow: 0 4px 12px rgba(189, 147, 249, 0.5);
+    box-shadow: 0px 4px 12px rgba(189, 147, 249, 0.5);
 }
 
 .content-container {
@@ -56,13 +57,13 @@ body {
     background-color: #2a2a3b;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
     transition: transform 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.6);
 }
 
 .content-item:hover {
     transform: scale(1.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.7);
 }
 
 .content-card {
@@ -74,6 +75,7 @@ body {
 }
 
 .content-image {
+    position: relative;
     width: 100%;
     height: 180px;
     background-color: #1b1b2f;
@@ -104,7 +106,7 @@ body {
     font-size: 18px;
     font-weight: bold;
     color: #ffda79;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.4);
     margin-bottom: 8px;
 }
 
@@ -122,22 +124,22 @@ body {
     border-radius: 30px;
     color: #fff;
     font-weight: bold;
-    text-transform: uppercase;
     cursor: pointer;
+    transition: background 0.4s, box-shadow 0.4s, transform 0.4s;
+    text-transform: uppercase;
     text-decoration: none;
     display: inline-block;
-    transition: background 0.4s, box-shadow 0.4s, transform 0.4s;
 }
 
 .btn-primary:hover {
     background: linear-gradient(135deg, #bd93f9, #ff79c6);
-    box-shadow: 0 8px 20px rgba(255, 121, 198, 0.5);
+    box-shadow: 0px 8px 20px rgba(255, 121, 198, 0.5);
     transform: translateY(-2px);
 }
 
 .see-more-section {
     text-align: center;
-    margin: 30px 0 0;
+    margin: 30px 0;
 }
 
 .see-more-btn {
@@ -147,24 +149,12 @@ body {
     border-radius: 30px;
     color: #fff;
     font-weight: bold;
-    font-size: 14px;
     cursor: pointer;
+    font-size: 14px;
     transition: background-color 0.4s, box-shadow 0.4s;
 }
 
 .see-more-btn:hover {
     background-color: #bd93f9;
-    box-shadow: 0 6px 16px rgba(255, 121, 198, 0.5);
-}
-
-.latest-wins-section {
-    padding: 30px 20px 0;
-    text-align: center;
-}
-
-.latest-wins-section h2 {
-    font-size: 20px;
-    color: #ffda79;
-    margin: 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0px 6px 16px rgba(255, 121, 198, 0.5);
 }
