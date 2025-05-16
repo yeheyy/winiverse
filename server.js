@@ -141,7 +141,7 @@ app.put('/update/:id', upload.single('image'), (req, res) => {
 
             existingContent.username = username.trim();
             existingContent.description = description.trim();
-            existingContent.link = link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
+            existingContent.link = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
 
             data[contentIndex] = existingContent;
             fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
