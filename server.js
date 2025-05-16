@@ -13,24 +13,31 @@ const PORT = process.env.PORT || 3000;
 console.log("DEFAULT_REF_LINK:", process.env.DEFAULT_REF_LINK);
 console.log("App initialized. Starting server...");
 
-// ✅ Persistent Storage Path
-const dataFilePath = path.join('/data', 'data.json');
-const lastIdFilePath = path.join('/data', 'lastId.json');
+// ✅ Persistent Storage Paths
+const storagePath = '/data';
+const uploadsPath = path.join(storagePath, 'uploads');
+const dataFilePath = path.join(storagePath, 'data.json');
+const lastIdFilePath = path.join(storagePath, 'lastId.json');
 
-
-// Ensure the storage directory exists
+// ✅ Ensure directories exist
 if (!fs.existsSync(storagePath)) {
     fs.mkdirSync(storagePath, { recursive: true });
 }
-
-const uploadsPath = path.join(storagePath, 'uploads');
 if (!fs.existsSync(uploadsPath)) {
     fs.mkdirSync(uploadsPath, { recursive: true });
 }
 
+// ✅ Initialize data.json and lastId.json if they don't exist
+if (!fs.existsSync(dataFilePath)) fs.writeFileSync(dataFilePath, JSON.stringify([]));
+if (!fs.existsSync(lastIdFilePath)) fs.writeFileSync(lastIdFilePath, '0');
+
 // ✅ Middleware Setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ✅ Static Files Middleware
+app.use('/uploads', express.static(uploadsPath));
+app.use(express.static('public'));
 
 // ✅ Session Middleware
 app.use(session({
@@ -39,11 +46,6 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false }
 }));
-
-// ✅ Static Files Middleware >>>>>>>edit later<<<
-app.use('/uploads', express.static(path.join('/data', 'uploads')));
-
-app.use(express.static('public'));
 
 // ✅ Login Route
 app.post('/login', (req, res) => {
@@ -67,23 +69,14 @@ app.post('/logout', (req, res) => {
 // ✅ Multer Setup for File Uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadsDir = path.join('/data', 'uploads');
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-        cb(null, uploadsDir);
+        cb(null, uploadsPath);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
 
-
 const upload = multer({ storage });
-
-// ✅ Initialize data.json and lastId.json if they don't exist
-if (!fs.existsSync(dataFilePath)) fs.writeFileSync(dataFilePath, JSON.stringify([]));
-if (!fs.existsSync(lastIdFilePath)) fs.writeFileSync(lastIdFilePath, '0');
 
 // ✅ Get Next ID
 function getNextId() {
