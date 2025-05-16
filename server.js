@@ -14,7 +14,9 @@ console.log("DEFAULT_REF_LINK:", process.env.DEFAULT_REF_LINK);
 console.log("App initialized. Starting server...");
 
 // ✅ Persistent Storage Path
-const storagePath = path.join(__dirname, '/data');
+const dataFilePath = path.join('/data', 'data.json');
+const lastIdFilePath = path.join('/data', 'lastId.json');
+
 
 // Ensure the storage directory exists
 if (!fs.existsSync(storagePath)) {
@@ -25,9 +27,6 @@ const uploadsPath = path.join(storagePath, 'uploads');
 if (!fs.existsSync(uploadsPath)) {
     fs.mkdirSync(uploadsPath, { recursive: true });
 }
-
-const dataFilePath = path.join(storagePath, 'data.json');
-const lastIdFilePath = path.join(storagePath, 'lastId.json');
 
 // ✅ Middleware Setup
 app.use(express.json());
@@ -41,8 +40,9 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-// ✅ Static Files Middleware
-app.use('/uploads', express.static(uploadsPath));
+// ✅ Static Files Middleware >>>>>>>edit later<<<
+app.use('/uploads', express.static(path.join('/data', 'uploads')));
+
 app.use(express.static('public'));
 
 // ✅ Login Route
@@ -67,12 +67,17 @@ app.post('/logout', (req, res) => {
 // ✅ Multer Setup for File Uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, uploadsPath);
+        const uploadsDir = path.join('/data', 'uploads');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
+
 
 const upload = multer({ storage });
 
