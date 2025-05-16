@@ -15,14 +15,22 @@
 </div>
 
 <div class="login-container">
-  <form method="POST" action="/login">
-    <input type="text" name="username" placeholder="Username" required />
-    <input type="password" name="password" placeholder="Password" required />
-    <button type="submit">Login</button>
-</form>
+    <form method="POST" action="/login">
+        <input type="text" name="username" placeholder="Username" required />
+        <input type="password" name="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+    </form>
 
-
-    <div class="message" id="message"></div>
+    <div class="message" id="message">
+        <!-- Optional error message -->
+        <script>
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('error')) {
+                document.getElementById('message').innerText = 'Invalid username or password.';
+                document.getElementById('message').style.color = 'red';
+            }
+        </script>
+    </div>
 </div>
 
 </body>

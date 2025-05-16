@@ -1,8 +1,6 @@
-<!-- visitors page-->>
+<!-- visitors page -->
 
 <!DOCTYPE html>
-
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -21,26 +19,15 @@
   <input type="text" id="visitorSearchBox" placeholder="Search by username or description" />
 </div>
 
-<!-- Leaderboard Section -->
-
-<div class="leaderboard-section">
-  <h2>🏆 Top 10 Leaderboard</h2>
-  <ul id="leaderboard"></ul>
-</div>
-
-<!-- Latest Wins Section -->
-
+<!-- Latest Wins Title Only -->
 <div class="latest-wins-section">
   <h2>🔥 Latest Wins</h2>
-  <ul id="latestWins"></ul>
 </div>
 
 <!-- Main Content Grid -->
-
 <div class="content-container" id="visitor-content-container"></div>
 
 <!-- See More Button -->
-
 <div class="see-more-section">
   <button class="btn-primary see-more-btn" id="seeMoreVisitorBtn" onclick="loadMoreContent()">See More</button>
 </div>
@@ -54,10 +41,8 @@
     try {
       const response = await fetch('/data.json');
       visitorContentData = await response.json();
-      visitorContentData = visitorContentData.reverse();
+      visitorContentData = visitorContentData.reverse(); // latest first
       displayContent();
-      updateLeaderboard();
-      updateLatestWins();
     } catch (err) {
       console.error('Error loading content:', err);
     }
@@ -94,35 +79,6 @@
 
     const seeMoreBtn = document.getElementById('seeMoreVisitorBtn');
     seeMoreBtn.style.display = endIndex < data.length ? 'block' : 'none';
-  }
-
-  function updateLeaderboard() {
-    const leaderboard = document.getElementById('leaderboard');
-    leaderboard.innerHTML = '';
-
-    const top10 = [...visitorContentData]
-      .filter(item => item.amount)
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 10);
-
-    top10.forEach((item, index) => {
-      const li = document.createElement('li');
-      li.textContent = `${index + 1}. ${item.username} – ₱${Number(item.amount).toLocaleString()}`;
-      leaderboard.appendChild(li);
-    });
-  }
-
-  function updateLatestWins() {
-    const latestWins = document.getElementById('latestWins');
-    latestWins.innerHTML = '';
-
-    const latest = [...visitorContentData].slice(0, 5);
-
-    latest.forEach(item => {
-      const li = document.createElement('li');
-      li.textContent = `${item.username}: ${item.description}${item.amount ? ` – ₱${Number(item.amount).toLocaleString()}` : ''}`;
-      latestWins.appendChild(li);
-    });
   }
 
   function loadMoreContent() {
