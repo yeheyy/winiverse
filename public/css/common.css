@@ -179,3 +179,57 @@ input:focus, textarea:focus {
 .card-link:hover {
     color: #00c3ff;
 }
+
+/*menu styles*/
+
+/* Navbar Styles */
+.navbar {
+  width: 100%;
+  background: linear-gradient(90deg, #1b1b2f, #29294d);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.4);
+  padding: 12px 0;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffde59;
+  text-decoration: none;
+  letter-spacing: 1px;
+  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.nav-menu {
+  list-style: none;
+  display: flex;
+  gap: 25px;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-menu li a {
+  text-decoration: none;
+  color: #e0e0e0;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+
+.nav-menu li a:hover {
+  background: linear-gradient(135deg, #ff79c6, #bd93f9);
+  color: #fff;
+  box-shadow: 0px 4px 10px rgba(255, 121, 198, 0.4);
+}
