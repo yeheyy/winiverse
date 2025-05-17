@@ -8,24 +8,29 @@
   <title>Winiverse – Universe of Winners</title>
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/index.css" />
+  <!--font awesome-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 </head>
 <body>
 
-  <!-- menu-->
-   <nav class="navbar">
-  <div class="nav-container">
-    <a href="index.html" class="nav-logo">Winiverse</a>
-    <ul class="nav-menu">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="login.html">Login</a></li>
-    </ul>
-  </div>
+
+<!-- Navigation Menu -->
+<nav class="nav-bar">
+  <div class="nav-brand">Winiverse</div>
+  <div class="nav-toggle" onclick="toggleMenu()">☰</div>
+ <ul class="nav-links" id="navLinks">
+  <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+  <li><a href="login.html"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+  <li><a href="https://forms.gle/your-google-form-link" target="_blank"><i class="fas fa-paper-plane"></i> Submit Your Wins Story</a></li>
+</ul>
 </nav>
 
 
 
+
 <div class="header">
-  <h1>Welcome to <span class="highlight">Winiverse</span> – The Ultimate Universe of Winners!</h1>
+  <span class="highlight">Winiverse</span> – The Ultimate Universe of Winners!
 </div>
 
 <div class="search-section">
@@ -46,6 +51,13 @@
 </div>
 
 <script>
+  // Toggle Navivation Menu try
+
+function toggleMenu() {
+  const navLinks = document.getElementById('navLinks');
+  navLinks.classList.toggle('active');
+}
+
   let visitorContentData = [];
   let itemsPerPage = 12;
   let currentPage = 1;
@@ -109,8 +121,44 @@
     displayContent(filteredData);
   });
 
+
   window.onload = loadContent;
 </script>
 
+
+<!-- footer disclaimer-->
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-links">
+      <a href="#" class="footer-link">🔗Terms</a>
+      <span class="divider">|</span>
+      <a href="#" class="footer-link">🔗Privacy Policy</a>
+    </div>
+
+    <p class="disclaimer-title">📜 <strong>Disclaimer:</strong></p>
+
+    <div id="disclaimer-text" class="collapsed">
+      <p>
+        Winiverse is a testimonial showcase platform. We do not operate, manage, or facilitate any form of online gambling or betting. All content featured on this site is submitted by users for entertainment and informational purposes only. We do not guarantee results or earnings. Visitors are responsible for their own actions and are advised to comply with the laws in their respective jurisdictions.
+        <br><br>
+        By browsing this site, you acknowledge that you are at least <strong>18 years old</strong>.
+      </p>
+    </div>
+
+    <button id="toggleDisclaimer" class="toggle-btn">Read More</button>
+  </div>
+</footer>
+
+
+<!--footer dongling-->>
+<script>
+  const toggleBtn = document.getElementById('toggleDisclaimer');
+  const disclaimerText = document.getElementById('disclaimer-text');
+
+  toggleBtn.addEventListener('click', () => {
+    const isCollapsed = disclaimerText.classList.toggle('collapsed');
+    toggleBtn.textContent = isCollapsed ? 'Read More' : 'Read Less';
+  });
+</script>
 </body>
 </html>
