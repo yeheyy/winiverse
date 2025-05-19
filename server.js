@@ -36,14 +36,14 @@ if (!fs.existsSync(lastIdFilePath)) fs.writeFileSync(lastIdFilePath, '0');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Static Files Middleware
+// ✅ Static Files
 app.use('/uploads', express.static(uploadsPath));
 app.use(express.static('public', {
     index: false,
     extensions: ['html']
 }));
 
-// ✅ Session Middleware with FileStore
+// ✅ Session Middleware
 app.use(session({
     store: new FileStore({ path: sessionsPath }),
     secret: 'lucky',
@@ -52,22 +52,18 @@ app.use(session({
     cookie: { secure: false }
 }));
 
-// ✅ Authentication Middleware
+// ✅ Auth Middleware
 function isAuthenticated(req, res, next) {
     if (req.session.user === "ggyy") return next();
     return res.redirect('/login.html');
 }
 
-// ✅ Protect admin.html
-
-app.use(express.static('public', { index: false }));
-
-// Session-protected route for admin.html
+// ✅ Serve admin.html only if authenticated
 app.get('/admin.html', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'protected', 'admin.html'));
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// ✅ Login Route
+// ✅ Login
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (username === "ggyy" && password === "aa123123") {
@@ -77,7 +73,7 @@ app.post('/login', (req, res) => {
     return res.redirect("/login.html?error=1");
 });
 
-// ✅ Logout Route
+// ✅ Logout
 app.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
@@ -86,7 +82,7 @@ app.post('/logout', (req, res) => {
     });
 });
 
-// ✅ Multer Setup for File Uploads
+// ✅ Multer Setup
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, uploadsPath);
@@ -97,7 +93,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ✅ Get Next ID
+// ✅ Utility
 function getNextId() {
     let lastId = parseInt(fs.readFileSync(lastIdFilePath, 'utf8')) || 0;
     lastId += 1;
@@ -105,7 +101,7 @@ function getNextId() {
     return lastId;
 }
 
-// ✅ Fetch All Content
+// ✅ Public Data
 app.get('/data.json', (req, res) => {
     try {
         const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
@@ -115,8 +111,8 @@ app.get('/data.json', (req, res) => {
     }
 });
 
-// ✅ Add New Content
-app.post('/add-content', upload.single('image'), (req, res) => {
+// ✅ Add Content (Protected)
+app.post('/add-content', isAuthenticated, upload.single('image'), (req, res) => {
     const { username, description, link, amount } = req.body;
     const referralLink = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
@@ -140,33 +136,32 @@ app.post('/add-content', upload.single('image'), (req, res) => {
     }
 });
 
-// ✅ Update Content
-app.put('/update/:id', upload.single('image'), (req, res) => {
+// ✅ Update Content (Protected)
+app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
     const contentId = parseInt(req.params.id);
     const { username, description, link, amount } = req.body;
     const newImageFile = req.file ? `/uploads/${req.file.filename}` : null;
 
     try {
         const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-        const contentIndex = data.findIndex(item => item.id === contentId);
+        const index = data.findIndex(item => item.id === contentId);
 
-        if (contentIndex !== -1) {
-            const existingContent = data[contentIndex];
+        if (index !== -1) {
+            const existing = data[index];
 
             if (newImageFile) {
-                const oldImagePath = path.join(uploadsPath, path.basename(existingContent.imageUrl));
-                if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
-                existingContent.imageUrl = newImageFile;
+                const oldPath = path.join(uploadsPath, path.basename(existing.imageUrl));
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                existing.imageUrl = newImageFile;
             }
 
-            existingContent.username = username.trim();
-            existingContent.description = description.trim();
-            existingContent.link = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
-            existingContent.amount = amount ? parseFloat(amount) : null;
+            existing.username = username.trim();
+            existing.description = description.trim();
+            existing.link = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
+            existing.amount = amount ? parseFloat(amount) : null;
 
-            data[contentIndex] = existingContent;
+            data[index] = existing;
             fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
-
             res.json({ success: true, message: 'Content updated successfully' });
         } else {
             res.status(404).json({ error: 'Content not found' });
@@ -176,19 +171,19 @@ app.put('/update/:id', upload.single('image'), (req, res) => {
     }
 });
 
-// ✅ Delete Content
-app.delete('/delete/:id', (req, res) => {
+// ✅ Delete Content (Protected)
+app.delete('/delete/:id', isAuthenticated, (req, res) => {
     const contentId = parseInt(req.params.id);
 
     try {
         const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-        const contentIndex = data.findIndex(item => item.id === contentId);
+        const index = data.findIndex(item => item.id === contentId);
 
-        if (contentIndex !== -1) {
-            const removedContent = data.splice(contentIndex, 1)[0];
+        if (index !== -1) {
+            const removed = data.splice(index, 1)[0];
 
-            if (removedContent.imageUrl) {
-                const filePath = path.join(uploadsPath, path.basename(removedContent.imageUrl));
+            if (removed.imageUrl) {
+                const filePath = path.join(uploadsPath, path.basename(removed.imageUrl));
                 if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             }
 
@@ -202,7 +197,7 @@ app.delete('/delete/:id', (req, res) => {
     }
 });
 
-// ✅ Start the server
+// ✅ Start Server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
