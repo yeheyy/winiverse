@@ -18,28 +18,28 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_USER     = process.env.ADMIN_USER || 'ggyy';
 const ADMIN_PASS     = process.env.ADMIN_PASS || 'aa123123';
 const DEFAULT_REF    = process.env.DEFAULT_REF_LINK || 'https://example.com/default123';
-const SESSION_SECRET = process.env.SESSION_SECRET || 'lucky';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'Lucky123123';
 
 // ————————————————————————————————
-// PATHS (Render Persistent Storage)
+// PATHS
 // ————————————————————————————————
-const dataRoot    = '/data'; // Render’s persistent disk
+const dataRoot    = '/data';
 const uploadsDir  = path.join(dataRoot, 'uploads');
 const sessionsDir = path.join(dataRoot, 'sessions');
 const dataFile    = path.join(dataRoot, 'data.json');
 const lastIdFile  = path.join(dataRoot, 'lastId.json');
+const backupFile  = path.join(dataRoot, 'backup.json');
 
 const baseDir      = __dirname;
 const publicDir    = path.join(baseDir, 'public');
 const protectedDir = path.join(baseDir, 'protected');
 
 // ————————————————————————————————
-// INITIALIZE DIRECTORIES
+// INIT STORAGE
 // ————————————————————————————————
 [uploadsDir, sessionsDir].forEach(dir => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
-
 if (!fs.existsSync(dataFile))    fs.writeFileSync(dataFile, '[]');
 if (!fs.existsSync(lastIdFile))  fs.writeFileSync(lastIdFile, '0');
 
@@ -58,13 +58,20 @@ function isAuthenticated(req, res, next) {
   return res.redirect('/login.html');
 }
 
+function backupData(data) {
+  try {
+    fs.writeFileSync(backupFile, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error("⚠️ Failed to write backup:", err.message);
+  }
+}
+
 // ————————————————————————————————
 // MIDDLEWARE
 // ————————————————————————————————
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session Setup
 app.use(session({
   store: new FileStore({ path: sessionsDir }),
   secret: SESSION_SECRET,
@@ -73,19 +80,17 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-// Static assets and uploads
 app.use('/css', express.static(path.join(publicDir, 'css')));
 app.use('/uploads', express.static(uploadsDir));
 
 // ————————————————————————————————
-// ROUTES – HTML Pages
+// ROUTES - HTML Pages
 // ————————————————————————————————
 app.get('/',             (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
+app.get('/index.html',   (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
 app.get('/login.html',   (req, res) => res.sendFile(path.join(publicDir, 'login.html')));
 app.get('/terms.html',   (req, res) => res.sendFile(path.join(publicDir, 'terms.html')));
 app.get('/privacy.html', (req, res) => res.sendFile(path.join(publicDir, 'privacy.html')));
-
-// Admin page protected
 app.get('/admin.html', isAuthenticated, (req, res) => {
   res.sendFile(path.join(protectedDir, 'admin.html'));
 });
@@ -111,7 +116,7 @@ app.post('/logout', (req, res) => {
 });
 
 // ————————————————————————————————
-// UPLOADS SETUP
+// UPLOAD SETUP
 // ————————————————————————————————
 const upload = multer({
   storage: multer.diskStorage({
@@ -151,6 +156,7 @@ app.post('/add-content', isAuthenticated, upload.single('image'), (req, res) => 
     const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
     data.push(newEntry);
     fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+    backupData(data);
     res.json({ success: true, message: 'Content added', newEntry });
   } catch {
     res.status(500).json({ error: 'Failed to add content' });
@@ -181,6 +187,7 @@ app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
 
     data[index] = item;
     fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+    backupData(data);
     res.json({ success: true, message: 'Content updated', item });
 
   } catch {
@@ -203,6 +210,7 @@ app.delete('/delete/:id', isAuthenticated, (req, res) => {
     }
 
     fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+    backupData(data);
     res.json({ success: true, message: 'Content deleted' });
 
   } catch {
