@@ -23,13 +23,13 @@ const DEFAULT_REF = process.env.DEFAULT_REF_LINK || 'https://example.com/default
 //  PATHS & STORAGE
 // ———————————————————————————————————————
 const baseDir      = __dirname;
-const storageDir   = path.join(baseDir, 'data');        // ← relative path!
+const storageDir   = path.join(baseDir, 'data');        
 const uploadsDir   = path.join(storageDir, 'uploads');
 const sessionsDir  = path.join(storageDir, 'sessions');
 const dataFile     = path.join(storageDir, 'data.json');
 const lastIdFile   = path.join(storageDir, 'lastId.json');
-const publicDir    = path.join(baseDir, 'public');      // only assets here
-const protectedDir = path.join(baseDir, 'protected');   // HTML you guard
+const publicDir    = path.join(baseDir, 'public');      
+const protectedDir = path.join(baseDir, 'protected');   
 
 // Ensure directories exist
 [ storageDir, uploadsDir, sessionsDir ].forEach(d => {
@@ -70,24 +70,19 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-// Serve only static **assets** (CSS/JS/images) from public/
+// Serve only static assets from public/
 app.use('/css',  express.static(path.join(publicDir, 'css')));
 app.use('/js',   express.static(path.join(publicDir, 'js')));
 app.use('/img',  express.static(path.join(publicDir, 'img')));
-
-// Serve uploaded user images
 app.use('/uploads', express.static(uploadsDir));
 
 // ———————————————————————————————————————
 //  HTML ROUTES
 // ———————————————————————————————————————
-// Visitors-facing pages (no auth)
-app.get('/',          (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
-app.get('/login.html',(req, res) => res.sendFile(path.join(publicDir, 'login.html')));
-app.get('/terms.html',(req, res) => res.sendFile(path.join(publicDir, 'terms.html')));
-app.get('/privacy.html',(req,res)=> res.sendFile(path.join(publicDir,'privacy.html')));
-
-// Protected admin page
+app.get('/',            (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
+app.get('/login.html',  (req, res) => res.sendFile(path.join(publicDir, 'login.html')));
+app.get('/terms.html',  (req, res) => res.sendFile(path.join(publicDir, 'terms.html')));
+app.get('/privacy.html',(req, res) => res.sendFile(path.join(publicDir, 'privacy.html')));
 app.get('/admin.html', isAuthenticated, (req, res) => {
   res.sendFile(path.join(protectedDir, 'admin.html'));
 });
@@ -125,7 +120,6 @@ const upload = multer({
 // ———————————————————————————————————————
 //  DATA API
 // ———————————————————————————————————————
-// Fetch all content
 app.get('/data.json', (req, res) => {
   try {
     const all = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
@@ -135,8 +129,7 @@ app.get('/data.json', (req, res) => {
   }
 });
 
-// Add content (protected)
-app.post('/add-content',    isAuthenticated, upload.single('image'), (req, res) => {
+app.post('/add-content', isAuthenticated, upload.single('image'), (req, res) => {
   const { username, description, link, amount } = req.body;
   const referral = (link||'').trim() || DEFAULT_REF;
   if (!username.trim() || !description.trim()) {
@@ -162,8 +155,7 @@ app.post('/add-content',    isAuthenticated, upload.single('image'), (req, res) 
   }
 });
 
-// Update content (protected)
-app.put('/update/:id',      isAuthenticated, upload.single('image'), (req, res) => {
+app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
   const id = parseInt(req.params.id, 10);
   const { username, description, link, amount } = req.body;
   const newImg = req.file ? `/uploads/${req.file.filename}` : null;
@@ -194,8 +186,7 @@ app.put('/update/:id',      isAuthenticated, upload.single('image'), (req, res) 
   }
 });
 
-// Delete content (protected)
-app.delete('/delete/:id',   isAuthenticated, (req, res) => {
+app.delete('/delete/:id', isAuthenticated, (req, res) => {
   const id = parseInt(req.params.id, 10);
 
   try {
