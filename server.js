@@ -19,9 +19,9 @@ console.log("App initialized. Starting server...");
 // ✅ Persistent Storage Paths
 const storagePath = '/data';
 const uploadsPath = path.join(storagePath, 'uploads');
+const sessionsPath = path.join(storagePath, 'sessions');
 const dataFilePath = path.join(storagePath, 'data.json');
 const lastIdFilePath = path.join(storagePath, 'lastId.json');
-const sessionsPath = path.join(storagePath, 'sessions');
 
 // ✅ Ensure directories exist
 [storagePath, uploadsPath, sessionsPath].forEach(dir => {
