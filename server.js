@@ -58,9 +58,9 @@ function isAuthenticated(req, res, next) {
     return res.redirect('/login.html');
 }
 
-// ✅ Serve admin.html only if authenticated
+// ✅ Serve admin.html from protected folder only if authenticated
 app.get('/admin.html', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+    res.sendFile(path.join(__dirname, 'protected', 'admin.html'));
 });
 
 // ✅ Login
