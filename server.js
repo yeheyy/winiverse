@@ -38,7 +38,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // ✅ Static Files Middleware
 app.use('/uploads', express.static(uploadsPath));
-app.use(express.static('public'));
+app.use(express.static('public', {
+    index: false,
+    extensions: ['html']
+}));
 
 // ✅ Session Middleware with FileStore
 app.use(session({
@@ -48,6 +51,17 @@ app.use(session({
     saveUninitialized: true,
     cookie: { secure: false }
 }));
+
+// ✅ Authentication Middleware
+function isAuthenticated(req, res, next) {
+    if (req.session.user === "ggyy") return next();
+    return res.redirect('/login.html');
+}
+
+// ✅ Protect admin.html
+app.get('/admin.html', isAuthenticated, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
 
 // ✅ Login Route
 app.post('/login', (req, res) => {
