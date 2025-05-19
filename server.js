@@ -72,7 +72,7 @@ app.get('/admin.html', isAuthenticated, (req, res) => {
 // ✅ Login
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    if (username === "ggyy" && password === "aa123123") {
+    if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
         req.session.user = username;
         return res.redirect("/admin.html");
     }
