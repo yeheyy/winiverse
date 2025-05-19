@@ -21,7 +21,6 @@
   <div class="nav-toggle" onclick="toggleMenu()">☰</div>
  <ul class="nav-links" id="navLinks">
   <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
-  <li><a href="login.html"><i class="fas fa-sign-in-alt"></i> Login</a></li>
   <li><a href="https://forms.gle/your-google-form-link" target="_blank"><i class="fas fa-paper-plane"></i> Submit Your Wins Story</a></li>
 </ul>
 </nav>
@@ -129,11 +128,11 @@ function toggleMenu() {
 <!-- footer disclaimer-->
 <footer class="site-footer">
   <div class="footer-content">
-    <div class="footer-links">
-      <a href="#" class="footer-link">🔗Terms</a>
-      <span class="divider">|</span>
-      <a href="#" class="footer-link">🔗Privacy Policy</a>
-    </div>
+   <div class="footer">
+  <a href="terms.html" target="_blank" rel="noopener noreferrer">Terms</a> |
+  <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy</a>
+</div>
+
 
     <p class="disclaimer-title">📜 <strong>Disclaimer:</strong></p>
 
@@ -150,7 +149,7 @@ function toggleMenu() {
 </footer>
 
 
-<!--footer dongling-->>
+<!--footer dongling-->
 <script>
   const toggleBtn = document.getElementById('toggleDisclaimer');
   const disclaimerText = document.getElementById('disclaimer-text');

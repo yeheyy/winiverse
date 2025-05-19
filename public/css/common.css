@@ -348,3 +348,19 @@ input:focus, textarea:focus {
 .divider {
   color: #555;
 }
+
+/* color when clicked*/
+
+.footer a {
+  color: #00c3ff; /* default color */
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer a:hover {
+  color: rgb(255, 121, 198); /* hover color */
+}
+
+.footer a:visited {
+  color: rgb(189, 147, 249); /* color when link has been clicked */
+}
