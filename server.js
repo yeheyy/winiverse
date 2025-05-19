@@ -1,6 +1,5 @@
-// this is the backend code for the app
-
-console.log("Starting server.js...");
+// server.js
+console.log("Starting server.js…");
 
 require('dotenv').config();
 const express = require('express');
@@ -13,197 +12,210 @@ const multer = require('multer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-console.log("DEFAULT_REF_LINK:", process.env.DEFAULT_REF_LINK);
-console.log("App initialized. Starting server...");
+// ———————————————————————————————————————
+//  Configuration
+// ———————————————————————————————————————
+const ADMIN_USER     = process.env.ADMIN_USER     || 'ggyy';
+const ADMIN_PASS     = process.env.ADMIN_PASS     || 'aa123123';
+const DEFAULT_REF    = process.env.DEFAULT_REF_LINK || 'https://example.com/default123';
 
-// ✅ Persistent Storage Paths
-const storagePath = '/data';
-const uploadsPath = path.join(storagePath, 'uploads');
-const sessionsPath = path.join(storagePath, 'sessions');
-const dataFilePath = path.join(storagePath, 'data.json');
-const lastIdFilePath = path.join(storagePath, 'lastId.json');
+// ———————————————————————————————————————
+//  Paths & Storage Setup
+// ———————————————————————————————————————
+const baseDir       = __dirname;
+const storageDir    = path.join(baseDir, 'data');
+const uploadsDir    = path.join(storageDir, 'uploads');
+const sessionsDir   = path.join(storageDir, 'sessions');
+const dataFile      = path.join(storageDir, 'data.json');
+const lastIdFile    = path.join(storageDir, 'lastId.json');
+const publicDir     = path.join(baseDir, 'public');
+const protectedDir  = path.join(baseDir, 'protected');
 
-// ✅ Ensure directories exist
-[storagePath, uploadsPath, sessionsPath].forEach(dir => {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+// Ensure our directories exist
+[ storageDir, uploadsDir, sessionsDir ].forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
-// ✅ Initialize data.json and lastId.json if they don't exist
-if (!fs.existsSync(dataFilePath)) fs.writeFileSync(dataFilePath, JSON.stringify([]));
-if (!fs.existsSync(lastIdFilePath)) fs.writeFileSync(lastIdFilePath, '0');
+// Initialize JSON files if missing
+if (!fs.existsSync(dataFile))   fs.writeFileSync(dataFile,   '[]');
+if (!fs.existsSync(lastIdFile)) fs.writeFileSync(lastIdFile, '0');
 
-// ✅ Middleware Setup
+// ———————————————————————————————————————
+//  Helpers
+// ———————————————————————————————————————
+function getNextId() {
+  let last = parseInt(fs.readFileSync(lastIdFile, 'utf8'), 10) || 0;
+  last += 1;
+  fs.writeFileSync(lastIdFile, last.toString());
+  return last;
+}
+
+function isAuthenticated(req, res, next) {
+  if (req.session.user === ADMIN_USER) return next();
+  res.redirect('/login.html');
+}
+
+// ———————————————————————————————————————
+//  Middleware
+// ———————————————————————————————————————
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Static Files
-app.use('/uploads', express.static(uploadsPath));
-app.use(express.static('public', {
-    index: false,
-    extensions: ['html']
-}));
-
-// ✅ Redirect / to index.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-
-// ✅ Session Middleware
+// Sessions (file-backed)
 app.use(session({
-    store: new FileStore({ path: sessionsPath }),
-    secret: 'lucky',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }
+  store: new FileStore({ path: sessionsDir }),
+  secret: process.env.SESSION_SECRET || 'lucky',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
 }));
 
-// ✅ Auth Middleware
-function isAuthenticated(req, res, next) {
-    if (req.session.user === "ggyy") return next();
-    return res.redirect('/login.html');
-}
+// Serve uploads
+app.use('/uploads', express.static(uploadsDir));
 
-// ✅ Serve admin.html from protected folder only if authenticated
-app.get('/admin.html', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'protected', 'admin.html'));
+// Serve public pages (index, login, terms, privacy, etc.)
+app.use(express.static(publicDir, {
+  index: false,
+  extensions: ['html']
+}));
+
+// Redirect root → index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
-// ✅ Login
+// ———————————————————————————————————————
+//  Authentication Routes
+// ———————————————————————————————————————
 app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
-        req.session.user = username;
-        return res.redirect("/admin.html");
-    }
-    return res.redirect("/login.html?error=1");
+  const { username, password } = req.body;
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    req.session.user = username;
+    return res.redirect('/admin.html');
+  }
+  res.redirect('/login.html?error=1');
 });
 
-// ✅ Logout
 app.post('/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
-        res.clearCookie('connect.sid');
-        res.json({ success: true });
-    });
+  req.session.destroy(err => {
+    res.clearCookie('connect.sid');
+    if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
+    res.json({ success: true });
+  });
 });
 
-// ✅ Multer Setup
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadsPath);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
+// Protect admin.html
+app.get('/admin.html', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(protectedDir, 'admin.html'));
 });
-const upload = multer({ storage });
 
-// ✅ Utility
-function getNextId() {
-    let lastId = parseInt(fs.readFileSync(lastIdFilePath, 'utf8')) || 0;
-    lastId += 1;
-    fs.writeFileSync(lastIdFilePath, lastId.toString());
-    return lastId;
-}
+// ———————————————————————————————————————
+//  Multer File Uploads
+// ———————————————————————————————————————
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadsDir),
+    filename:    (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+  })
+});
 
-// ✅ Public Data
+// ———————————————————————————————————————
+//  Data API
+// ———————————————————————————————————————
+// Fetch all content
 app.get('/data.json', (req, res) => {
-    try {
-        const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-        res.json(data);
-    } catch (err) {
-        res.status(500).json({ error: 'Error reading data file' });
-    }
+  try {
+    const all = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    res.json(all);
+  } catch {
+    res.status(500).json({ error: 'Error reading data file' });
+  }
 });
 
-// ✅ Add Content (Protected)
+// Add content (protected)
 app.post('/add-content', isAuthenticated, upload.single('image'), (req, res) => {
-    const { username, description, link, amount } = req.body;
-    const referralLink = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
+  const { username, description, link, amount } = req.body;
+  const referral = link?.trim() || DEFAULT_REF;
+  if (!username?.trim() || !description?.trim()) {
+    return res.status(400).json({ error: 'Username and description required' });
+  }
 
-    const newContent = {
-        id: getNextId(),
-        username: username.trim(),
-        description: description.trim(),
-        link: referralLink,
-        imageUrl,
-        amount: amount ? parseFloat(amount) : null
-    };
+  const entry = {
+    id:         getNextId(),
+    username:   username.trim(),
+    description:description.trim(),
+    link:       referral,
+    imageUrl:   req.file ? `/uploads/${req.file.filename}` : '',
+    amount:     amount ? parseFloat(amount) : null
+  };
 
-    try {
-        const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-        data.push(newContent);
-        fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
-        res.json({ success: true, message: 'Content added successfully' });
-    } catch (err) {
-        res.status(500).json({ error: 'Error adding content' });
-    }
+  try {
+    const arr = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    arr.push(entry);
+    fs.writeFileSync(dataFile, JSON.stringify(arr, null, 2));
+    res.json({ success: true, message: 'Content added', entry });
+  } catch {
+    res.status(500).json({ error: 'Error adding content' });
+  }
 });
 
-// ✅ Update Content (Protected)
+// Update content (protected)
 app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
-    const contentId = parseInt(req.params.id);
-    const { username, description, link, amount } = req.body;
-    const newImageFile = req.file ? `/uploads/${req.file.filename}` : null;
+  const id = parseInt(req.params.id, 10);
+  const { username, description, link, amount } = req.body;
+  const newImage = req.file ? `/uploads/${req.file.filename}` : null;
 
-    try {
-        const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-        const index = data.findIndex(item => item.id === contentId);
+  try {
+    const arr = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    const idx = arr.findIndex(x => x.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Not found' });
 
-        if (index !== -1) {
-            const existing = data[index];
-
-            if (newImageFile) {
-                const oldPath = path.join(uploadsPath, path.basename(existing.imageUrl));
-                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-                existing.imageUrl = newImageFile;
-            }
-
-            existing.username = username.trim();
-            existing.description = description.trim();
-            existing.link = link && link.trim() !== '' ? link.trim() : process.env.DEFAULT_REF_LINK;
-            existing.amount = amount ? parseFloat(amount) : null;
-
-            data[index] = existing;
-            fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
-            res.json({ success: true, message: 'Content updated successfully' });
-        } else {
-            res.status(404).json({ error: 'Content not found' });
-        }
-    } catch (err) {
-        res.status(500).json({ error: 'Error updating content' });
+    const item = arr[idx];
+    if (newImage) {
+      // remove old file
+      const oldPath = path.join(uploadsDir, path.basename(item.imageUrl));
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      item.imageUrl = newImage;
     }
+    item.username    = username.trim();
+    item.description = description.trim();
+    item.link        = link?.trim() || DEFAULT_REF;
+    item.amount      = amount ? parseFloat(amount) : null;
+
+    arr[idx] = item;
+    fs.writeFileSync(dataFile, JSON.stringify(arr, null, 2));
+    res.json({ success: true, message: 'Content updated', item });
+
+  } catch {
+    res.status(500).json({ error: 'Error updating content' });
+  }
 });
 
-// ✅ Delete Content (Protected)
+// Delete content (protected)
 app.delete('/delete/:id', isAuthenticated, (req, res) => {
-    const contentId = parseInt(req.params.id);
+  const id = parseInt(req.params.id, 10);
 
-    try {
-        const data = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-        const index = data.findIndex(item => item.id === contentId);
+  try {
+    const arr = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    const idx = arr.findIndex(x => x.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Not found' });
 
-        if (index !== -1) {
-            const removed = data.splice(index, 1)[0];
-
-            if (removed.imageUrl) {
-                const filePath = path.join(uploadsPath, path.basename(removed.imageUrl));
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-            }
-
-            fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2));
-            res.json({ success: true, message: 'Content deleted successfully' });
-        } else {
-            res.status(404).json({ error: 'Content not found' });
-        }
-    } catch (err) {
-        res.status(500).json({ error: 'Error deleting content' });
+    const [removed] = arr.splice(idx, 1);
+    if (removed.imageUrl) {
+      const filePath = path.join(uploadsDir, path.basename(removed.imageUrl));
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     }
+
+    fs.writeFileSync(dataFile, JSON.stringify(arr, null, 2));
+    res.json({ success: true, message: 'Content deleted' });
+  } catch {
+    res.status(500).json({ error: 'Error deleting content' });
+  }
 });
 
-// ✅ Start Server
+// ———————————————————————————————————————
+//  Start
+// ———————————————————————————————————————
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
