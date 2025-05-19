@@ -1,10 +1,11 @@
-//this is the backend code for the app
+// this is the backend code for the app
 
 console.log("Starting server.js...");
 
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
@@ -20,10 +21,12 @@ const storagePath = '/data';
 const uploadsPath = path.join(storagePath, 'uploads');
 const dataFilePath = path.join(storagePath, 'data.json');
 const lastIdFilePath = path.join(storagePath, 'lastId.json');
+const sessionsPath = path.join(storagePath, 'sessions');
 
 // ✅ Ensure directories exist
-if (!fs.existsSync(storagePath)) fs.mkdirSync(storagePath, { recursive: true });
-if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
+[storagePath, uploadsPath, sessionsPath].forEach(dir => {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
 
 // ✅ Initialize data.json and lastId.json if they don't exist
 if (!fs.existsSync(dataFilePath)) fs.writeFileSync(dataFilePath, JSON.stringify([]));
@@ -37,8 +40,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsPath));
 app.use(express.static('public'));
 
-// ✅ Session Middleware
+// ✅ Session Middleware with FileStore
 app.use(session({
+    store: new FileStore({ path: sessionsPath }),
     secret: 'lucky',
     resave: false,
     saveUninitialized: true,
