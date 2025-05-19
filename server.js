@@ -43,6 +43,12 @@ app.use(express.static('public', {
     extensions: ['html']
 }));
 
+// ✅ Redirect / to index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+
 // ✅ Session Middleware
 app.use(session({
     store: new FileStore({ path: sessionsPath }),
