@@ -59,8 +59,12 @@ function isAuthenticated(req, res, next) {
 }
 
 // ✅ Protect admin.html
+
+app.use(express.static('public', { index: false }));
+
+// Session-protected route for admin.html
 app.get('/admin.html', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+    res.sendFile(path.join(__dirname, 'protected', 'admin.html'));
 });
 
 // ✅ Login Route
