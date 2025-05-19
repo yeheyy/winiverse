@@ -2,38 +2,38 @@
 console.log("Starting server.js…");
 
 require('dotenv').config();
-const express = require('express');
-const session = require('express-session');
-const FileStore = require('session-file-store')(session);
-const fs = require('fs');
-const path = require('path');
-const multer = require('multer');
+const express       = require('express');
+const session       = require('express-session');
+const FileStore     = require('session-file-store')(session);
+const fs            = require('fs');
+const path          = require('path');
+const multer        = require('multer');
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ———————————————————————————————————————
-//  Configuration
+//  CONFIGURATION
 // ———————————————————————————————————————
-const ADMIN_USER     = process.env.ADMIN_USER     || 'ggyy';
-const ADMIN_PASS     = process.env.ADMIN_PASS     || 'aa123123';
-const DEFAULT_REF    = process.env.DEFAULT_REF_LINK || 'https://example.com/default123';
+const ADMIN_USER  = process.env.ADMIN_USER     || 'ggyy';
+const ADMIN_PASS  = process.env.ADMIN_PASS     || 'aa123123';
+const DEFAULT_REF = process.env.DEFAULT_REF_LINK || 'https://example.com/default123';
 
 // ———————————————————————————————————————
-//  Paths & Storage Setup
+//  PATHS & STORAGE
 // ———————————————————————————————————————
-const baseDir       = __dirname;
-const storageDir    = path.join(baseDir, 'data');
-const uploadsDir    = path.join(storageDir, 'uploads');
-const sessionsDir   = path.join(storageDir, 'sessions');
-const dataFile      = path.join(storageDir, 'data.json');
-const lastIdFile    = path.join(storageDir, 'lastId.json');
-const publicDir     = path.join(baseDir, 'public');
-const protectedDir  = path.join(baseDir, 'protected');
+const baseDir      = __dirname;
+const storageDir   = path.join(baseDir, 'data');        // ← relative path!
+const uploadsDir   = path.join(storageDir, 'uploads');
+const sessionsDir  = path.join(storageDir, 'sessions');
+const dataFile     = path.join(storageDir, 'data.json');
+const lastIdFile   = path.join(storageDir, 'lastId.json');
+const publicDir    = path.join(baseDir, 'public');      // only assets here
+const protectedDir = path.join(baseDir, 'protected');   // HTML you guard
 
-// Ensure our directories exist
-[ storageDir, uploadsDir, sessionsDir ].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+// Ensure directories exist
+[ storageDir, uploadsDir, sessionsDir ].forEach(d => {
+  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
 });
 
 // Initialize JSON files if missing
@@ -41,7 +41,7 @@ if (!fs.existsSync(dataFile))   fs.writeFileSync(dataFile,   '[]');
 if (!fs.existsSync(lastIdFile)) fs.writeFileSync(lastIdFile, '0');
 
 // ———————————————————————————————————————
-//  Helpers
+//  HELPERS
 // ———————————————————————————————————————
 function getNextId() {
   let last = parseInt(fs.readFileSync(lastIdFile, 'utf8'), 10) || 0;
@@ -56,7 +56,7 @@ function isAuthenticated(req, res, next) {
 }
 
 // ———————————————————————————————————————
-//  Middleware
+//  MIDDLEWARE
 // ———————————————————————————————————————
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -70,22 +70,30 @@ app.use(session({
   cookie: { secure: false }
 }));
 
-// Serve uploads
+// Serve only static **assets** (CSS/JS/images) from public/
+app.use('/css',  express.static(path.join(publicDir, 'css')));
+app.use('/js',   express.static(path.join(publicDir, 'js')));
+app.use('/img',  express.static(path.join(publicDir, 'img')));
+
+// Serve uploaded user images
 app.use('/uploads', express.static(uploadsDir));
 
-// Serve public pages (index, login, terms, privacy, etc.)
-app.use(express.static(publicDir, {
-  index: false,
-  extensions: ['html']
-}));
+// ———————————————————————————————————————
+//  HTML ROUTES
+// ———————————————————————————————————————
+// Visitors-facing pages (no auth)
+app.get('/',          (req, res) => res.sendFile(path.join(publicDir, 'index.html')));
+app.get('/login.html',(req, res) => res.sendFile(path.join(publicDir, 'login.html')));
+app.get('/terms.html',(req, res) => res.sendFile(path.join(publicDir, 'terms.html')));
+app.get('/privacy.html',(req,res)=> res.sendFile(path.join(publicDir,'privacy.html')));
 
-// Redirect root → index.html
-app.get('/', (req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
+// Protected admin page
+app.get('/admin.html', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(protectedDir, 'admin.html'));
 });
 
 // ———————————————————————————————————————
-//  Authentication Routes
+//  AUTH ROUTES
 // ———————————————————————————————————————
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
@@ -104,13 +112,8 @@ app.post('/logout', (req, res) => {
   });
 });
 
-// Protect admin.html
-app.get('/admin.html', isAuthenticated, (req, res) => {
-  res.sendFile(path.join(protectedDir, 'admin.html'));
-});
-
 // ———————————————————————————————————————
-//  Multer File Uploads
+//  MULTER SETUP
 // ———————————————————————————————————————
 const upload = multer({
   storage: multer.diskStorage({
@@ -120,7 +123,7 @@ const upload = multer({
 });
 
 // ———————————————————————————————————————
-//  Data API
+//  DATA API
 // ———————————————————————————————————————
 // Fetch all content
 app.get('/data.json', (req, res) => {
@@ -133,20 +136,20 @@ app.get('/data.json', (req, res) => {
 });
 
 // Add content (protected)
-app.post('/add-content', isAuthenticated, upload.single('image'), (req, res) => {
+app.post('/add-content',    isAuthenticated, upload.single('image'), (req, res) => {
   const { username, description, link, amount } = req.body;
-  const referral = link?.trim() || DEFAULT_REF;
-  if (!username?.trim() || !description?.trim()) {
-    return res.status(400).json({ error: 'Username and description required' });
+  const referral = (link||'').trim() || DEFAULT_REF;
+  if (!username.trim() || !description.trim()) {
+    return res.status(400).json({ error: 'Username and description are required' });
   }
 
   const entry = {
-    id:         getNextId(),
-    username:   username.trim(),
-    description:description.trim(),
-    link:       referral,
-    imageUrl:   req.file ? `/uploads/${req.file.filename}` : '',
-    amount:     amount ? parseFloat(amount) : null
+    id:          getNextId(),
+    username:    username.trim(),
+    description: description.trim(),
+    link:        referral,
+    imageUrl:    req.file ? `/uploads/${req.file.filename}` : '',
+    amount:      amount ? parseFloat(amount) : null
   };
 
   try {
@@ -160,10 +163,10 @@ app.post('/add-content', isAuthenticated, upload.single('image'), (req, res) => 
 });
 
 // Update content (protected)
-app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
+app.put('/update/:id',      isAuthenticated, upload.single('image'), (req, res) => {
   const id = parseInt(req.params.id, 10);
   const { username, description, link, amount } = req.body;
-  const newImage = req.file ? `/uploads/${req.file.filename}` : null;
+  const newImg = req.file ? `/uploads/${req.file.filename}` : null;
 
   try {
     const arr = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
@@ -171,15 +174,15 @@ app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
     if (idx === -1) return res.status(404).json({ error: 'Not found' });
 
     const item = arr[idx];
-    if (newImage) {
-      // remove old file
+    if (newImg) {
       const oldPath = path.join(uploadsDir, path.basename(item.imageUrl));
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      item.imageUrl = newImage;
+      item.imageUrl = newImg;
     }
+
     item.username    = username.trim();
     item.description = description.trim();
-    item.link        = link?.trim() || DEFAULT_REF;
+    item.link        = (link||'').trim() || DEFAULT_REF;
     item.amount      = amount ? parseFloat(amount) : null;
 
     arr[idx] = item;
@@ -192,7 +195,7 @@ app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
 });
 
 // Delete content (protected)
-app.delete('/delete/:id', isAuthenticated, (req, res) => {
+app.delete('/delete/:id',   isAuthenticated, (req, res) => {
   const id = parseInt(req.params.id, 10);
 
   try {
@@ -214,7 +217,7 @@ app.delete('/delete/:id', isAuthenticated, (req, res) => {
 });
 
 // ———————————————————————————————————————
-//  Start
+//  START SERVER
 // ———————————————————————————————————————
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
