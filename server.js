@@ -116,7 +116,7 @@ app.post('/logout', (req, res) => {
 });
 
 // ————————————————————————————————
-// UPLOAD SETUP
+// UPLOAD SETUP (allow up to 3 images)
 // ————————————————————————————————
 const upload = multer({
   storage: multer.diskStorage({
@@ -137,18 +137,20 @@ app.get('/data.json', (req, res) => {
   }
 });
 
-app.post('/add-content', isAuthenticated, upload.single('image'), (req, res) => {
+app.post('/add-content', isAuthenticated, upload.array('images', 3), (req, res) => {
   const { username, description, link, amount } = req.body;
   if (!username?.trim() || !description?.trim()) {
     return res.status(400).json({ error: 'Username and description required' });
   }
+
+  const imageUrls = (req.files || []).map(f => `/uploads/${f.filename}`);
 
   const newEntry = {
     id: getNextId(),
     username: username.trim(),
     description: description.trim(),
     link: (link || '').trim() || DEFAULT_REF,
-    imageUrl: req.file ? `/uploads/${req.file.filename}` : '',
+    imageUrls,
     amount: amount ? parseFloat(amount) : null
   };
 
@@ -163,10 +165,10 @@ app.post('/add-content', isAuthenticated, upload.single('image'), (req, res) => 
   }
 });
 
-app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
+app.put('/update/:id', isAuthenticated, upload.array('images', 3), (req, res) => {
   const id = parseInt(req.params.id, 10);
   const { username, description, link, amount } = req.body;
-  const newImage = req.file ? `/uploads/${req.file.filename}` : null;
+  const newImageUrls = (req.files || []).map(f => `/uploads/${f.filename}`);
 
   try {
     const data = JSON.parse(fs.readFileSync(dataFile, 'utf8'));
@@ -174,10 +176,14 @@ app.put('/update/:id', isAuthenticated, upload.single('image'), (req, res) => {
     if (index === -1) return res.status(404).json({ error: 'Content not found' });
 
     const item = data[index];
-    if (newImage) {
-      const oldPath = path.join(uploadsDir, path.basename(item.imageUrl));
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      item.imageUrl = newImage;
+
+    // Remove old images if new ones uploaded
+    if (newImageUrls.length > 0 && item.imageUrls) {
+      item.imageUrls.forEach(url => {
+        const filePath = path.join(uploadsDir, path.basename(url));
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      });
+      item.imageUrls = newImageUrls;
     }
 
     item.username    = username.trim();
@@ -204,9 +210,11 @@ app.delete('/delete/:id', isAuthenticated, (req, res) => {
     if (index === -1) return res.status(404).json({ error: 'Content not found' });
 
     const [removed] = data.splice(index, 1);
-    if (removed.imageUrl) {
-      const imgPath = path.join(uploadsDir, path.basename(removed.imageUrl));
-      if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+    if (removed.imageUrls) {
+      removed.imageUrls.forEach(url => {
+        const filePath = path.join(uploadsDir, path.basename(url));
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      });
     }
 
     fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));

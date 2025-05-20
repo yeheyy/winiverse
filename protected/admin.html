@@ -5,18 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin - Uni-Winners</title>
   <link rel="stylesheet" href="css/admin.css"/>
+  
 </head>
 <body>
 
-<div class="header">
-  <h1>Admin - Manage Casino Winners</h1>
-  <button class="btn-primary" onclick="window.location.href='index.html'">Visitors Mode</button>
-  <button class="btn-logout" id="logoutBtn">Logout</button>
-</div>
+<!-- Admin Navigation Menu -->
+<nav class="nav-bar">
+  <div class="nav-brand">Admin - Manage Casino Winners</div>
+  <div class="nav-toggle" onclick="toggleMenu()">☰</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html"><i class="fas fa-home"></i> Visitors Mode</a></li>
+    <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+  </ul>
+</nav>
+
+
 
 <div class="container">
 
-  <!-- Add Content Form -->
   <div class="add-content-form">
     <h2>Add New Content</h2>
     <form id="addContentForm" enctype="multipart/form-data" action="/add-content" method="POST">
@@ -37,8 +43,8 @@
         <input type="url" id="link" name="link" required />
       </div>
       <div class="form-group">
-        <label for="image">Image:</label>
-        <input type="file" id="image" name="image" accept="image/*" required />
+        <label for="images">Images (up to 3):</label>
+        <input type="file" id="images" name="images" accept="image/*" multiple required />
       </div>
       <div class="form-group">
         <button type="submit" class="btn-primary">Add Content</button>
@@ -46,16 +52,13 @@
     </form>
   </div>
 
-  <!-- Content Container -->
   <div class="content-container" id="admin-content-container"></div>
-
 </div>
 
 <script>
 let adminContentData = [];
 const contentContainer = document.getElementById('admin-content-container');
 
-// Load Content Data
 async function loadAdminContent() {
   try {
     const response = await fetch('/data.json');
@@ -67,18 +70,15 @@ async function loadAdminContent() {
   }
 }
 
-// Add New Content
 const addContentForm = document.getElementById('addContentForm');
 addContentForm.addEventListener('submit', async function (e) {
   e.preventDefault();
   const formData = new FormData(addContentForm);
-
   try {
     const response = await fetch('/add-content', {
       method: 'POST',
       body: formData,
     });
-
     const result = await response.json();
     if (result.success) {
       alert(result.message);
@@ -92,25 +92,50 @@ addContentForm.addEventListener('submit', async function (e) {
   }
 });
 
-// Display Content
+// toggle menu functions //
+//                       //
+function toggleMenu() { 
+  const navLinks = document.getElementById('navLinks');
+  navLinks.classList.toggle('active');
+}
+
+document.getElementById('logoutBtn').addEventListener('click', function (e) {
+  e.preventDefault();
+  fetch('/logout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) window.location.href = 'login.html';
+    else alert('Logout failed. Please try again.');
+  });
+});
+
 function displayAdminContent() {
   contentContainer.innerHTML = '';
-
   adminContentData.forEach((item) => {
     const contentItem = document.createElement('div');
     contentItem.classList.add('content-item');
     contentItem.setAttribute('data-id', item.id);
 
+    const imagesHtml = (item.imageUrls || [])
+      .map((url, idx) =>
+        `<img src="${url}" class="slide-${item.id} ${idx === 0 ? 'active' : ''}" data-index="${idx}">`
+      ).join('');
+
     contentItem.innerHTML = `
-      <div class="content-image">
-        <img src="${item.imageUrl}" alt="${item.username}" class="image-preview" data-id="${item.id}" onclick="triggerImageUpload(${item.id})" style="cursor: pointer;">
-        <input type="file" class="image-upload-input" data-id="${item.id}" style="display: none;" accept="image/*">
+      <div class="slider-wrapper">
+        ${imagesHtml}
+        <button class="slider-arrow left" onclick="prevSlide(${item.id})">&#10094;</button>
+        <button class="slider-arrow right" onclick="nextSlide(${item.id})">&#10095;</button>
       </div>
       <div class="content-info">
         <input type="text" value="${item.username}" class="edit-field" data-field="username" readonly>
         <textarea class="edit-field" data-field="description" readonly>${item.description}</textarea>
         <input type="number" value="${item.amount || 0}" class="edit-field" data-field="amount" readonly>
         <input type="url" value="${item.link}" class="edit-field" data-field="link" readonly>
+        <input type="file" class="multi-image-upload" data-id="${item.id}" style="display: none;" accept="image/*" multiple>
       </div>
       <div class="content-buttons">
         <button onclick="toggleEditMode(${item.id})" class="btn-update">Edit</button>
@@ -123,11 +148,20 @@ function displayAdminContent() {
   });
 }
 
-function triggerImageUpload(id) {
-  const contentItem = document.querySelector(`.content-item[data-id="${id}"]`);
-  const isEditable = contentItem.getAttribute('data-editable') === 'true';
-  const imageInput = contentItem.querySelector('.image-upload-input');
-  if (isEditable) imageInput.click();
+function nextSlide(id) {
+  const slides = document.querySelectorAll(`.slide-${id}`);
+  let current = Array.from(slides).findIndex(slide => slide.classList.contains('active'));
+  slides[current].classList.remove('active');
+  let next = (current + 1) % slides.length;
+  slides[next].classList.add('active');
+}
+
+function prevSlide(id) {
+  const slides = document.querySelectorAll(`.slide-${id}`);
+  let current = Array.from(slides).findIndex(slide => slide.classList.contains('active'));
+  slides[current].classList.remove('active');
+  let prev = (current - 1 + slides.length) % slides.length;
+  slides[prev].classList.add('active');
 }
 
 function toggleEditMode(id) {
@@ -135,8 +169,7 @@ function toggleEditMode(id) {
   const saveBtn = contentItem.querySelector('.btn-save');
   const editBtn = contentItem.querySelector('.btn-update');
   const fields = contentItem.querySelectorAll('.edit-field');
-  const imageInput = contentItem.querySelector('.image-upload-input');
-  const imagePreview = contentItem.querySelector('.image-preview');
+  const imageInput = contentItem.querySelector('.multi-image-upload');
   const isEditable = contentItem.getAttribute('data-editable') === 'true';
 
   if (isEditable) {
@@ -144,14 +177,12 @@ function toggleEditMode(id) {
     editBtn.style.display = 'inline-block';
     fields.forEach(field => field.readOnly = true);
     imageInput.style.display = 'none';
-    imagePreview.style.cursor = 'pointer';
     contentItem.setAttribute('data-editable', 'false');
   } else {
     saveBtn.style.display = 'inline-block';
     editBtn.style.display = 'none';
     fields.forEach(field => field.readOnly = false);
     imageInput.style.display = 'block';
-    imagePreview.style.cursor = 'pointer';
     contentItem.setAttribute('data-editable', 'true');
   }
 }
@@ -162,8 +193,8 @@ async function saveContent(id) {
   const description = contentItem.querySelector('.edit-field[data-field="description"]').value.trim();
   const amount = contentItem.querySelector('.edit-field[data-field="amount"]').value.trim();
   const link = contentItem.querySelector('.edit-field[data-field="link"]').value.trim();
-  const imageInput = contentItem.querySelector('.image-upload-input');
-  const newImageFile = imageInput.files[0];
+  const imageInput = contentItem.querySelector('.multi-image-upload');
+  const files = imageInput.files;
 
   const formData = new FormData();
   formData.append('username', username);
@@ -171,8 +202,8 @@ async function saveContent(id) {
   formData.append('amount', amount);
   formData.append('link', link);
 
-  if (newImageFile) {
-    formData.append('image', newImageFile);
+  for (let i = 0; i < files.length; i++) {
+    formData.append('images', files[i]);
   }
 
   try {
@@ -180,7 +211,6 @@ async function saveContent(id) {
       method: 'PUT',
       body: formData,
     });
-
     const result = await response.json();
     if (result.success) {
       alert('Content updated successfully');
@@ -198,7 +228,6 @@ async function deleteContent(id) {
     const response = await fetch(`/delete/${id}`, {
       method: 'DELETE',
     });
-
     const result = await response.json();
     if (result.success) {
       alert('Content deleted successfully');
