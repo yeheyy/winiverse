@@ -245,6 +245,14 @@ body {
     }
 }
 
+/* Sticky nav container */
+.sticky-nav {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  background-color: #1f1b3e;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
 
 
 /* ——————————— Slideshow Styles ——————————— */
